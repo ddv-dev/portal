@@ -1,0 +1,103 @@
+/* resources/css/4-elements/typography.css */
+/* ============================================
+   СТИЛИ ДЛЯ HTML-ЭЛЕМЕНТОВ
+   Базовое оформление текста
+   ============================================ */
+
+body {
+    font-family: var(--font-family);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== ЗАГОЛОВКИ (цвет из твоего дизайна) ===== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    color: var(--color-heading);  /* #4668AA */
+    margin-bottom: var(--spacing-md);
+}
+
+h1 {
+    font-size: var(--font-size-3xl);
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: var(--font-size-2xl);
+    letter-spacing: -0.01em;
+}
+
+h3 {
+    font-size: var(--font-size-xl);
+}
+
+h4 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* ===== ПАРАГРАФЫ ===== */
+p {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);  /* rgba(100, 116, 139, 1) */
+    font-size: var(--font-size-base);
+    line-height: 1.7;
+}
+
+/* ===== ССЫЛКИ ===== */
+a {
+    color: var(--color-primary);
+    transition: color var(--transition-fast);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+/* ===== КОД ===== */
+code {
+    background: rgba(70, 104, 170, 0.08);
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9em;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    color: var(--color-primary);
+}
+
+/* ===== СПИСКИ ===== */
+ul,
+ol {
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+}
+
+li {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* ===== ВТОРОСТЕПЕННЫЙ ТЕКСТ ===== */
+.text-muted {
+    color: var(--color-text-muted);  /* #697996 */
+    font-size: var(--font-size-sm);
+}
+
+/* ===== БЛОКИ ЦИТАТ ===== */
+blockquote {
+    border-left: 4px solid var(--color-primary);
+    padding-left: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
