@@ -1,0 +1,80 @@
+/* resources/css/6-components/button.css */
+/* ============================================
+   КОМПОНЕНТ: Кнопка
+   Акцентный цвет — #FA792F
+   ============================================ */
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 28px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family);
+    border-radius: var(--border-radius-base);  /* 12px */
+    transition: all var(--transition-base);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    line-height: 1;
+}
+
+/* --- Основная кнопка (акцентная) --- */
+.button--primary {
+    background-color: var(--color-component);  /* #FA792F */
+    color: var(--color-text-inverse);
+    box-shadow: 0 2px 12px rgba(250, 121, 47, 0.25);
+}
+
+.button--primary:hover {
+    background-color: var(--color-component-hover);  /* #e06520 */
+    box-shadow: 0 4px 20px rgba(250, 121, 47, 0.35);
+    transform: translateY(-2px);
+}
+
+.button--primary:active {
+    transform: translateY(0px);
+}
+
+/* --- Вторичная кнопка (светлая) --- */
+.button--secondary {
+    background-color: var(--color-bg-card);  /* #FFFFFF */
+    color: var(--color-primary);  /* #4668AA */
+    border: 2px solid var(--color-primary);
+}
+
+.button--secondary:hover {
+    background-color: var(--color-primary);  /* #4668AA */
+    color: var(--color-text-inverse);
+}
+
+/* --- Кнопка-ссылка (текстовая) --- */
+.button--text {
+    background: none;
+    color: var(--color-component);  /* #FA792F */
+    padding: var(--spacing-sm) var(--spacing-md);
+    box-shadow: none;
+}
+
+.button--text:hover {
+    color: var(--color-component-hover);
+    background: rgba(250, 121, 47, 0.06);
+}
+
+/* --- Размеры кнопок --- */
+.button--sm {
+    padding: 8px 18px;
+    font-size: var(--font-size-xs);
+}
+
+.button--lg {
+    padding: 16px 36px;
+    font-size: var(--font-size-base);
+}
+
+.button--full {
+    width: 100%;
+    justify-content: center;
+}

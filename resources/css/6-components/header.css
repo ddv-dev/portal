@@ -1,0 +1,141 @@
+/* resources/css/6-components/header.css */
+/* ============================================
+   КОМПОНЕНТ: Шапка с навигацией
+   Корпоративный портал
+   ============================================ */
+
+/* ===== ОБЩАЯ ШАПКА ===== */
+.header {
+    background: var(--color-bg-card);  /* #FFFFFF */
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 0 0 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* ===== ВЕРХНЯЯ ЧАСТЬ: ЛОГОТИП ===== */
+.header__top {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+/* ===== ЛОГОТИП ===== */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    text-decoration: none;
+}
+
+.logo__image {
+    border-radius: 8px;
+    flex-shrink: 0;
+    width: 164px;
+    height: auto;
+    display: block;
+}
+
+.logo__text {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-primary);  /* #4668AA */
+    letter-spacing: -0.3px;
+}
+
+/* Адаптивность для телефонов */
+@media (max-width: 768px) {
+    .logo__image {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .logo__text {
+        font-size: 16px;
+    }
+}
+
+/* ===== НАВИГАЦИЯ (горизонтальное меню) ===== */
+.nav {
+    padding: 0;
+}
+
+.nav__list {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.nav__item {
+    margin: 0;
+}
+
+/* ===== ССЫЛКИ В МЕНЮ ===== */
+.nav__link {
+    display: block;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);  /* rgba(100, 116, 139, 1) */
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Состояние при наведении */
+.nav__link:hover {
+    color: var(--color-primary);  /* #4668AA */
+    background: rgba(70, 104, 170, 0.04);
+}
+
+/* ===== АКТИВНАЯ ССЫЛКА (подчёркнута оранжевым) ===== */
+.nav__link--active {
+    color: var(--color-primary);  /* #4668AA */
+    border-bottom-color: var(--color-component);  /* #FA792F */
+    font-weight: 600;
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОНОВ ===== */
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 0 0 0;
+    }
+    
+    .header__top {
+        padding-bottom: 12px;
+    }
+    
+    .logo__text {
+        font-size: 18px;
+    }
+    
+    .nav__list {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .nav__link {
+        padding: 10px 14px;
+        font-size: 13px;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav__link {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .logo__text {
+        font-size: 16px;
+    }
+    
+ 
+}

@@ -1,0 +1,35 @@
+/*@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+*/
+
+
+/* resources/css/app.css */
+/* ============================================
+   ГЛАВНЫЙ ФАЙЛ — собирает все слои
+   ============================================ */
+
+/* 1. Переменные */
+@import '1-settings/variables.css';
+
+/* 3. Сброс стилей */
+@import '3-generic/reset.css';
+
+/* 4. Базовые элементы */
+@import '4-elements/typography.css';
+
+/* 5. Объекты/паттерны */
+@import '5-objects/container.css';
+
+/* 6. Компоненты */
+@import '6-components/header.css';
+@import '6-components/button.css';  /* ← Добавили кнопку */
+
+/* 7. Утилиты */
+@import '7-utilities/helpers.css';
