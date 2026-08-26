@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-{{-- resources/views/home.blade.php --}}
->>>>>>> 527adbd3def5b5a05c6b88b3685f79fb6cd11d58
-
 @extends('layouts.app')
 
 {{-- Заголовок вкладки --}}
@@ -13,12 +8,34 @@
 
 {{-- Основной контент --}}
 @section('content')
-    <div class="card">
-       
-        {{-- Кнопки для демонстрации --}}
-        <div style="display: flex; gap: 16px; margin-top: 24px;">
-            <button class="button button--primary">Акцентная кнопка</button>
-            <button class="button button--secondary">Вторичная кнопка</button>
+
+
+
+
+    <div class="news-container">
+
+        @forelse($news as $item)
+            <x-news-card :news="$item" :show-attachments="true" :show-read-more="true" :show-meta="true"
+                thumbnail-position="left" />
+        @empty
+            <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                <i class="fas fa-newspaper text-5xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600">Новостей пока нет</h3>
+                <p class="text-gray-400 mt-2">Скоро здесь появятся новые публикации</p>
+            </div>
+        @endforelse
+        <!-- Пагинация -->
+        <div class="mt-8">
+        {{ $news->links('vendor.pagination.custom') }}
         </div>
     </div>
+
+
+
+
+
+
+
+
+
 @endsection

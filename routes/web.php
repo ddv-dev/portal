@@ -1,10 +1,9 @@
 <?php
 
+use App\Http\Controllers\NewsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get('/', [NewsController::class, 'index'])->name('home');
 
 
 Route::get('/info', function () {

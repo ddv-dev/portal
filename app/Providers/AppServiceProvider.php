@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Providers;
+use Illuminate\Pagination\Paginator;
 
 use Illuminate\Support\ServiceProvider;
 use App\Observers\NewsObserver;
@@ -22,5 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         News::observe(NewsObserver::class);
+        Paginator::defaultView('vendor.pagination.custom');
+
     }
 }
