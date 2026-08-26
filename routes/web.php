@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('home');
+<<<<<<< HEAD
 })->name('home');
 
 
@@ -31,3 +32,6 @@ Route::get('/directory', function () {
     return view('directory');
 })->name('directory');
 
+=======
+});
+>>>>>>> 527adbd3def5b5a05c6b88b3685f79fb6cd11d58

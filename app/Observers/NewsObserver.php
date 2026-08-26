@@ -9,6 +9,10 @@ class NewsObserver
 {
     public function created(News $news)
     {
+<<<<<<< HEAD
+=======
+        // Получаем загруженные файлы из сессии или запроса
+>>>>>>> 527adbd3def5b5a05c6b88b3685f79fb6cd11d58
         $uploadedFiles = session('news_attachments') ?? [];
         
         if (!empty($uploadedFiles)) {

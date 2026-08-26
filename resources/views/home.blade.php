@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+{{-- resources/views/home.blade.php --}}
+>>>>>>> 527adbd3def5b5a05c6b88b3685f79fb6cd11d58
 
 @extends('layouts.app')
 
