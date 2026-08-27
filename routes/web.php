@@ -1,15 +1,22 @@
 <?php
+// routes/web.php
 
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PhoneBookController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Attachment;
 use App\Models\News;
-use App\Http\Controllers\PhoneBookController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Главная страница
 Route::get('/', [NewsController::class, 'index'])->name('home');
 
-
-
+// Новости - скачивание файлов
 Route::get('/news/{news}/download/{attachment}', function (News $news, Attachment $attachment) {
     if (!$news->attachments()->where('attachment_id', $attachment->id)->exists()) {
         abort(404);
@@ -24,30 +31,15 @@ Route::get('/news/{news}/download/{attachment}', function (News $news, Attachmen
     return response()->download($filePath, $attachment->name);
 })->name('news.download');
 
-Route::get('/info', function () {
-    return view('info');
-})->name('info');
+// Статические страницы
+Route::view('/info', 'info')->name('info');
+Route::view('/sop', 'sop')->name('sop');
+Route::view('/birthdays', 'birthdays')->name('birthdays');
+Route::view('/orders', 'orders')->name('orders');
+Route::view('/appeals', 'appeals')->name('appeals');
 
-Route::get('/sop', function () {
-    return view('sop');
-})->name('sop');
+// Телефонный справочник
+Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory');
 
-Route::get('/birthdays', function () {
-    return view('birthdays');
-})->name('birthdays');
-
-Route::get('/orders', function () {
-    return view('orders');
-})->name('orders');
-
-Route::get('/appeals', function () {
-    return view('appeals');
-})->name('appeals');
-
-// Маршрут для телефонного справочника - обновленный
-Route::get('/directory', [PhoneBookController::class, 'index'])
-    ->name('directory');
-
-// API маршрут для поиска (опционально)
-Route::get('/directory/search', [PhoneBookController::class, 'search'])
-    ->name('directory.search');
+// API для поиска в телефонном справочнике (AJAX)
+Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');

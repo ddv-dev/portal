@@ -8,7 +8,8 @@ use App\Models\Dept;
 use App\Models\Corpus;
 use App\Models\Building;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class PhoneBookController extends Controller
 {
@@ -17,28 +18,43 @@ class PhoneBookController extends Controller
      */
     public function index(Request $request)
     {
-        // Используем input() вместо get()
         $search = $request->input('search');
         $deptId = $request->input('dept_id');
         $corpusId = $request->input('corpus_id');
 
         // Получаем данные для меню
-        $departments = Dept::with(['type', 'corpusDepts.corpus.building'])
-            ->whereHas('deptWorkers', function($query) {
-                $query->whereHas('worker', function($q) {
-                    $q->where('is_active', true);
-                });
-            })
-            ->get()
-            ->groupBy('type.name');
+        try {
+            $departments = Dept::with(['type', 'corpusDepts.corpus.building'])
+                ->whereHas('deptWorkers', function($query) {
+                    $query->whereHas('worker', function($q) {
+                        $q->where('is_active', true);
+                    });
+                })
+                ->get()
+                ->groupBy('type.name');
+        } catch (\Exception $e) {
+            Log::error('Error loading departments: ' . $e->getMessage());
+            $departments = collect();
+        }
 
-        $buildings = Building::with(['corpuses.corpusDepts.dept'])
+        try {
+            $buildings = Building::with(['corpuses' => function($query) {
+                $query->whereHas('corpusDepts.dept.deptWorkers', function($q) {
+                    $q->whereHas('worker', function($w) {
+                        $w->where('is_active', true);
+                    });
+                });
+            }])
             ->whereHas('corpuses.corpusDepts.dept.deptWorkers', function($query) {
                 $query->whereHas('worker', function($q) {
                     $q->where('is_active', true);
                 });
             })
             ->get();
+        } catch (\Exception $e) {
+            Log::error('Error loading buildings: ' . $e->getMessage());
+            $buildings = collect();
+        }
 
         // Запрос на получение сотрудников
         $workersQuery = Worker::with([
@@ -99,7 +115,6 @@ class PhoneBookController extends Controller
      */
     public function search(Request $request)
     {
-        // Используем input() вместо get()
         $query = $request->input('q');
 
         if (empty($query)) {
