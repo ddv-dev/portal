@@ -1,0 +1,19 @@
+.attachments-header {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    border-top: 1px solid #f0f2f5;
+    padding-top: 10px;
+    color: var(--color-primary-dark);
+}
+
+.attachments-list {
+    display: grid;
+    gap: var(--spacing-sm);
+    grid-auto-flow: row dense;
+}
+
+.attachment-name {
+    font-size: var(--font-size-sm);
+    color: var(--color-primary-light);
+    font-weight: var(--font-weight-medium);
+}

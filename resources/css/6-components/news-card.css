@@ -1,0 +1,27 @@
+.news-card {
+    margin-bottom: var(--spacing-2xl);
+    background-color: var(--color-bg-card);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-base);
+    gap:var(--spacing-sm);
+
+}
+
+.news-card-header {
+    flex-direction: column-reverse;
+    display: flex;
+}
+
+.news-card-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.news-card-desc {
+    font-weight: var(--font-weight-medium);
+}
+
+.news-card-date {
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+}

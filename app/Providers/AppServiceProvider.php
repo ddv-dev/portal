@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        News::observe(NewsObserver::class);
+      //  News::observe(NewsObserver::class);
         Paginator::defaultView('vendor.pagination.custom');
 
     }

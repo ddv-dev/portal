@@ -18,6 +18,7 @@ use Filament\Forms\Components\Placeholder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\RichEditor;
 
 class NewsResource extends Resource
 {
@@ -48,12 +49,31 @@ class NewsResource extends Resource
                                 ->default(true)
                                 ->helperText('Если включено, новость будет видна на сайте'),
 
-                            Forms\Components\Textarea::make('description')
+                            RichEditor::make('description')
                                 ->label('Текст новости')
-                                ->rows(8)
                                 ->required()
-                                ->placeholder('Введите текст новости...')
-                                ->columnSpan(2),
+                                ->toolbarButtons([
+                                    'bold',
+                                    'italic',
+                                    'underline',
+                                    'strike',
+                                    'blockquote',
+                                    'bulletList',
+                                    'orderedList',
+                                    'h2',
+                                    'h3',
+                                    'link',
+                                    'image',
+                                    'alignLeft',
+                                    'alignCenter',
+                                    'alignRight',
+                                ])
+                                ->columnSpan(2)
+                                ->fileAttachmentsDisk('public')
+                                ->fileAttachmentsDirectory('attachments/news/images')
+                                ->fileAttachmentsVisibility('public')
+                                ->maxLength(65535)
+                                ->placeholder('Введите текст новости...'),
                         ]),
                     ]),
 
@@ -117,18 +137,18 @@ class NewsResource extends Resource
                                 }
 
                                 $html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
-                                
+
                                 foreach ($record->attachments as $attachment) {
                                     $html .= '<div class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-300">';
                                     $html .= '<div class="flex items-center gap-3 flex-1 min-w-0">';
-                                    
+
                                     // Иконка по типу файла
                                     $icon = self::getFileIcon($attachment->type);
                                     $color = self::getFileColor($attachment->type);
                                     $html .= '<div class="flex-shrink-0 w-10 h-10 rounded-lg ' . $color . ' flex items-center justify-center shadow-sm">';
                                     $html .= '<i class="fas ' . $icon . ' text-white text-lg"></i>';
                                     $html .= '</div>';
-                                    
+
                                     // Имя файла и тип
                                     $html .= '<div class="flex-1 min-w-0">';
                                     $html .= '<div class="text-sm font-medium text-gray-700 truncate">';
@@ -138,25 +158,25 @@ class NewsResource extends Resource
                                     $html .= self::getFileTypeLabel($attachment->type);
                                     $html .= '</div>';
                                     $html .= '</div>';
-                                    
+
                                     $html .= '</div>';
-                                    
+
                                     // Кнопка отвязывания
                                     $html .= '<button type="button" onclick="if(confirm(\'Отвязать вложение «' . htmlspecialchars($attachment->name) . '»?\')) { @this.call(\'detachAttachment\', ' . $attachment->id . ') }" class="flex-shrink-0 ml-2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200" title="Отвязать">';
                                     $html .= '<i class="fas fa-unlink"></i>';
                                     $html .= '</button>';
-                                    
+
                                     $html .= '</div>';
                                 }
-                                
+
                                 $html .= '</div>';
-                                
+
                                 return new HtmlString($html);
                             })
                             ->columnSpan('full'),
                     ])
                     ->collapsible()
-                    ->collapsed(fn ($record) => !$record || $record->attachments->count() === 0),
+                    ->collapsed(fn($record) => !$record || $record->attachments->count() === 0),
             ]);
     }
 
@@ -250,8 +270,8 @@ class NewsResource extends Resource
         if (str_starts_with($mimeType, 'image/')) {
             return 'fa-image';
         }
-        
-        return match($mimeType) {
+
+        return match ($mimeType) {
             'application/pdf' => 'fa-file-pdf',
             'application/msword' => 'fa-file-word',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'fa-file-word',
@@ -272,8 +292,8 @@ class NewsResource extends Resource
         if (str_starts_with($mimeType, 'image/')) {
             return 'bg-purple-600';
         }
-        
-        return match($mimeType) {
+
+        return match ($mimeType) {
             'application/pdf' => 'bg-red-600',
             'application/msword' => 'bg-blue-600',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'bg-blue-600',
@@ -294,8 +314,8 @@ class NewsResource extends Resource
         if (str_starts_with($mimeType, 'image/')) {
             return 'Изображение';
         }
-        
-        return match($mimeType) {
+
+        return match ($mimeType) {
             'application/pdf' => 'PDF документ',
             'application/msword' => 'Word документ',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'Word документ (DOCX)',
@@ -316,7 +336,7 @@ class NewsResource extends Resource
         try {
             if (Storage::disk('public')->exists($path)) {
                 $size = Storage::disk('public')->size($path);
-                
+
                 if ($size < 1024) {
                     return $size . ' Б';
                 } elseif ($size < 1048576) {
@@ -328,7 +348,7 @@ class NewsResource extends Resource
         } catch (\Exception $e) {
             return '—';
         }
-        
+
         return '—';
     }
 }

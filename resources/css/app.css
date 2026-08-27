@@ -29,7 +29,9 @@
 
 /* 6. Компоненты */
 @import '6-components/header.css';
-@import '6-components/button.css';  /* ← Добавили кнопку */
+@import '6-components/button.css';  
+@import '6-components/attachments.css';  
+@import '6-components/news-card.css';  
 
 /* 7. Утилиты */
 @import '7-utilities/helpers.css';

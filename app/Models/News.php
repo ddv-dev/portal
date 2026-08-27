@@ -10,7 +10,7 @@ class News extends Model
 {
     protected $table = 'new';
     public $timestamps = false;
-    
+
     protected $fillable = [
         'title',
         'description',
