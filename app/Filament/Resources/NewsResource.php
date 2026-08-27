@@ -14,8 +14,10 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Placeholder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 
 class NewsResource extends Resource
 {
@@ -39,101 +41,117 @@ class NewsResource extends Resource
                                 ->label('Заголовок')
                                 ->required()
                                 ->maxLength(1000)
-                                ->placeholder('Заголовок новости...'),
+                                ->placeholder('Введите заголовок новости...'),
 
                             Forms\Components\Toggle::make('is_active')
                                 ->label('Опубликовано')
                                 ->default(true)
-                                ->inline(false),
+                                ->helperText('Если включено, новость будет видна на сайте'),
 
                             Forms\Components\Textarea::make('description')
                                 ->label('Текст новости')
-                                ->rows(6)
+                                ->rows(8)
                                 ->required()
-                                ->placeholder('Текст новости...'),
+                                ->placeholder('Введите текст новости...')
+                                ->columnSpan(2),
                         ]),
                     ]),
 
-                Section::make('Вложения')
+                Section::make('📎 Вложения')
                     ->schema([
                         Grid::make(2)->schema([
-                            // 1. Загрузка новых файлов - УПРОЩЕННАЯ ВЕРСИЯ
+                            // 1. Загрузка новых файлов
                             FileUpload::make('new_attachments')
                                 ->label('Загрузить новые файлы')
                                 ->multiple()
+                                ->disk('public')
                                 ->directory('attachments/news/' . date('Y/m/d'))
                                 ->preserveFilenames()
-                                ->maxSize(20480) // 20MB
-                                ->nullable()
-                                ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state && is_array($state)) {
-                                        session()->put('news_attachments', $state);
-                                    }
-                                }),
-                            
+                                ->maxSize(20480)
+                                ->acceptedFileTypes([
+                                    'image/jpeg',
+                                    'image/png',
+                                    'image/gif',
+                                    'image/webp',
+                                    'application/pdf',
+                                    'application/msword',
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                    'application/vnd.ms-excel',
+                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                    'text/plain',
+                                ])
+                                ->helperText('Максимальный размер файла: 20MB')
+                                ->columnSpan(1),
+
                             // 2. Выбор существующих вложений
-                            Select::make('attachments')
-                                ->label('Выбрать существующие вложения')
-                                ->relationship('attachments', 'name')
+                            Select::make('existing_attachments')
+                                ->label('Выбрать существующие файлы')
                                 ->multiple()
-                                ->preload()
                                 ->searchable()
-                                ->placeholder('Выберите существующие вложения')
-                                ->helperText('Выберите уже загруженные файлы'),
+                                ->preload()
+                                ->placeholder('Выберите файлы...')
+                                ->options(function () {
+                                    // Показываем только свободные файлы
+                                    $unusedIds = Attachment::whereDoesntHave('links')->pluck('id');
+                                    return Attachment::whereIn('id', $unusedIds)
+                                        ->orderBy('name')
+                                        ->get()
+                                        ->mapWithKeys(function ($item) {
+                                            return [$item->id => $item->name . ' (' . self::getFileTypeLabel($item->type) . ')'];
+                                        })
+                                        ->toArray();
+                                })
+                                ->helperText('Выберите уже загруженные файлы, которые не привязаны к другим записям')
+                                ->columnSpan(1),
                         ]),
                     ]),
 
-                Section::make('Загруженные файлы (предпросмотр)')
+                // Привязанные вложения
+                Section::make('📎 Привязанные вложения')
                     ->schema([
-                        Forms\Components\Placeholder::make('preview_attachments')
-                            ->label('Текущие вложения')
+                        Placeholder::make('current_attachments')
+                            ->label('')
                             ->content(function ($record) {
-                                if (!$record) {
-                                    $sessionFiles = session('news_attachments', []);
-                                    if (!empty($sessionFiles)) {
-                                        $html = '<ul class="list-disc list-inside space-y-1">';
-                                        foreach ($sessionFiles as $file) {
-                                            $html .= '<li>📎 ' . htmlspecialchars(basename($file)) . '</li>';
-                                        }
-                                        $html .= '</ul>';
-                                        return $html;
-                                    }
-                                    return 'Нет загруженных файлов';
+                                if (!$record || $record->attachments->isEmpty()) {
+                                    return new HtmlString('<div class="text-gray-400 text-sm py-4 text-center">Нет привязанных вложений</div>');
                                 }
+
+                                $html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
                                 
-                                $attachments = $record->attachments;
-                                if ($attachments->isEmpty()) {
-                                    return 'Нет загруженных файлов';
-                                }
-                                
-                                $html = '<ul class="list-disc list-inside space-y-1">';
-                                foreach ($attachments as $attachment) {
-                                    $html .= '<li>';
+                                foreach ($record->attachments as $attachment) {
+                                    $html .= '<div class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-300">';
+                                    $html .= '<div class="flex items-center gap-3 flex-1 min-w-0">';
+                                    
+                                    // Иконка по типу файла
+                                    $icon = self::getFileIcon($attachment->type);
+                                    $color = self::getFileColor($attachment->type);
+                                    $html .= '<div class="flex-shrink-0 w-10 h-10 rounded-lg ' . $color . ' flex items-center justify-center shadow-sm">';
+                                    $html .= '<i class="fas ' . $icon . ' text-white text-lg"></i>';
+                                    $html .= '</div>';
+                                    
+                                    // Имя файла и тип
+                                    $html .= '<div class="flex-1 min-w-0">';
+                                    $html .= '<div class="text-sm font-medium text-gray-700 truncate">';
                                     $html .= htmlspecialchars($attachment->name);
-                                    $html .= ' ';
+                                    $html .= '</div>';
+                                    $html .= '<div class="text-xs text-gray-400">';
+                                    $html .= self::getFileTypeLabel($attachment->type);
+                                    $html .= '</div>';
+                                    $html .= '</div>';
                                     
-                                    if ($attachment->path) {
-                                        $html .= '<span class="text-xs text-gray-500">(' . htmlspecialchars($attachment->path) . ')</span>';
-                                    }
+                                    $html .= '</div>';
                                     
-                                    if (str_starts_with($attachment->type, 'image/')) {
-                                        $html .= ' <span class="text-xs text-green-600">🖼️ Изображение</span>';
-                                    } elseif ($attachment->type === 'application/pdf') {
-                                        $html .= ' <span class="text-xs text-red-600">📄 PDF</span>';
-                                    } elseif (str_contains($attachment->type, 'word')) {
-                                        $html .= ' <span class="text-xs text-blue-600">📝 Word</span>';
-                                    } elseif (str_contains($attachment->type, 'excel') || str_contains($attachment->type, 'spreadsheet')) {
-                                        $html .= ' <span class="text-xs text-green-600">📊 Excel</span>';
-                                    } else {
-                                        $html .= ' <span class="text-xs text-gray-500">📎 ' . htmlspecialchars($attachment->type) . '</span>';
-                                    }
+                                    // Кнопка отвязывания
+                                    $html .= '<button type="button" onclick="if(confirm(\'Отвязать вложение «' . htmlspecialchars($attachment->name) . '»?\')) { @this.call(\'detachAttachment\', ' . $attachment->id . ') }" class="flex-shrink-0 ml-2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200" title="Отвязать">';
+                                    $html .= '<i class="fas fa-unlink"></i>';
+                                    $html .= '</button>';
                                     
-                                    $html .= '</li>';
+                                    $html .= '</div>';
                                 }
-                                $html .= '</ul>';
                                 
-                                return $html;
+                                $html .= '</div>';
+                                
+                                return new HtmlString($html);
                             })
                             ->columnSpan('full'),
                     ])
@@ -149,29 +167,24 @@ class NewsResource extends Resource
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->width('80px'),
 
                 Tables\Columns\TextColumn::make('title')
                     ->label('Заголовок')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
-                    ->limit(50),
-
-                Tables\Columns\TextColumn::make('description')
-                    ->label('Текст')
-                    ->limit(100)
-                    ->html()
-                    ->toggleable(),
+                    ->limit(50)
+                    ->weight('bold'),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Опубликовано')
                     ->boolean()
+                    ->sortable()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
-                    ->falseColor('danger')
-                    ->sortable(),
+                    ->falseColor('danger'),
 
                 Tables\Columns\TextColumn::make('attachments_count')
                     ->label('Вложений')
@@ -183,7 +196,8 @@ class NewsResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\Filter::make('is_active')
@@ -197,9 +211,12 @@ class NewsResource extends Resource
                     ->toggle(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Просмотр'),
+                Tables\Actions\EditAction::make()
+                    ->label('Редактировать'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Удалить'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -223,51 +240,95 @@ class NewsResource extends Resource
         ];
     }
 
-    // Метод для сохранения файлов после создания/обновления
-    public static function afterCreate($record, $data)
+    // ============ Вспомогательные методы для иконок ============
+
+    /**
+     * Получить иконку для типа файла
+     */
+    private static function getFileIcon($mimeType)
     {
-        static::saveAttachments($record, $data);
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'fa-image';
+        }
+        
+        return match($mimeType) {
+            'application/pdf' => 'fa-file-pdf',
+            'application/msword' => 'fa-file-word',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'fa-file-word',
+            'application/vnd.ms-excel' => 'fa-file-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'fa-file-excel',
+            'text/plain' => 'fa-file-alt',
+            'application/zip' => 'fa-file-archive',
+            'application/x-rar-compressed' => 'fa-file-archive',
+            default => 'fa-file',
+        };
     }
 
-    public static function afterUpdate($record, $data)
+    /**
+     * Получить цвет для типа файла
+     */
+    private static function getFileColor($mimeType)
     {
-        static::saveAttachments($record, $data);
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'bg-purple-600';
+        }
+        
+        return match($mimeType) {
+            'application/pdf' => 'bg-red-600',
+            'application/msword' => 'bg-blue-600',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'bg-blue-600',
+            'application/vnd.ms-excel' => 'bg-green-600',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'bg-green-600',
+            'text/plain' => 'bg-gray-600',
+            'application/zip' => 'bg-yellow-600',
+            'application/x-rar-compressed' => 'bg-yellow-600',
+            default => 'bg-gray-500',
+        };
     }
 
-    protected static function saveAttachments($record, $data)
+    /**
+     * Получить человекочитаемое название типа файла
+     */
+    private static function getFileTypeLabel($mimeType)
+    {
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'Изображение';
+        }
+        
+        return match($mimeType) {
+            'application/pdf' => 'PDF документ',
+            'application/msword' => 'Word документ',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'Word документ (DOCX)',
+            'application/vnd.ms-excel' => 'Excel таблица',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'Excel таблица (XLSX)',
+            'text/plain' => 'Текстовый файл',
+            'application/zip' => 'ZIP архив',
+            'application/x-rar-compressed' => 'RAR архив',
+            default => 'Файл',
+        };
+    }
+
+    /**
+     * Форматировать размер файла
+     */
+    private static function formatFileSize($path)
     {
         try {
-            $uploadedFiles = session('news_attachments', []);
-            
-            if (!empty($uploadedFiles) && is_array($uploadedFiles)) {
-                foreach ($uploadedFiles as $filePath) {
-                    $fullPath = storage_path('app/public/' . $filePath);
-                    
-                    if (file_exists($fullPath)) {
-                        $mimeType = mime_content_type($fullPath);
-                        $filename = basename($filePath);
-                        
-                        $attachment = $record->attachments()->create([
-                            'name' => $filename,
-                            'path' => $filePath,
-                            'type' => $mimeType ?: 'application/octet-stream',
-                        ]);
-                        
-                        Log::info('Attachment saved', [
-                            'news_id' => $record->id,
-                            'attachment_id' => $attachment->id,
-                            'file' => $filePath
-                        ]);
-                    }
-                }
+            if (Storage::disk('public')->exists($path)) {
+                $size = Storage::disk('public')->size($path);
                 
-                session()->forget('news_attachments');
+                if ($size < 1024) {
+                    return $size . ' Б';
+                } elseif ($size < 1048576) {
+                    return round($size / 1024, 1) . ' КБ';
+                } else {
+                    return round($size / 1048576, 1) . ' МБ';
+                }
             }
         } catch (\Exception $e) {
-            Log::error('Error saving attachments', [
-                'error' => $e->getMessage(),
-                'news_id' => $record->id
-            ]);
+            return '—';
         }
+        
+        return '—';
     }
 }

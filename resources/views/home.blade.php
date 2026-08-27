@@ -3,15 +3,8 @@
 {{-- Заголовок вкладки --}}
 @section('title', 'Главная страница')
 
-{{-- Заголовок в шапке (page_title) --}}
-@section('page_title', '🏠 Главная страница')
-
 {{-- Основной контент --}}
 @section('content')
-
-
-
-
     <div class="news-container">
 
         @forelse($news as $item)
@@ -26,7 +19,7 @@
         @endforelse
         <!-- Пагинация -->
         <div class="mt-8">
-        {{ $news->links('vendor.pagination.custom') }}
+            {{ $news->links('vendor.pagination.custom') }}
         </div>
     </div>
 
