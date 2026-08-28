@@ -25,7 +25,7 @@
                 </form>
             </div>
             <!-- Сброс фильтров -->
-            @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id'))
+            @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id') || request()->input('floor'))
                 <div class="reset-wrapper">
                     <a href="{{ route('directory') }}" class="reset-btn" data-reset-all>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -36,13 +36,14 @@
                     </a>
                 </div>
             @endif
+            
             <!-- Местоположение -->
             <div class="filter-section">
                 <h6 class="filter-title">Местоположение</h6>
                 <ul class="filter-menu">
                     <li>
-                        <a href="" data-reset="corpus_id"
-                            class="filter-link {{ !request()->input('corpus_id') ? 'active' : '' }}">
+                        <a href="#" data-reset="corpus_id" data-reset-floor="floor"
+                            class="filter-link {{ !request()->input('corpus_id') && !request()->input('floor') ? 'active' : '' }}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <rect x="2" y="2" width="20" height="20" rx="2" />
@@ -55,31 +56,69 @@
                     @if($buildings && $buildings->count() > 0)
                         @foreach($buildings as $building)
                             @if($building instanceof \App\Models\Building)
-                                <li>
-                                    <a href="#building-{{ $building->id }}" class="filter-link collapsed" data-bs-toggle="collapse"
-                                        role="button">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                                    </svg>
-                                        
-                                        {{ $building->name }}
-                                        <span class="arrow">▼</span>
-                                    </a>
-                                    <div class="sub-menu collapse" id="building-{{ $building->id }}">
+                                <li class="menu-item">
+                                    <div class="menu-toggle-wrapper">
+                                        <a href="#" 
+                                           class="filter-link toggle-link {{ request()->input('corpus_id') && $building->corpuses->contains('id', request()->input('corpus_id')) ? 'active' : '' }}"
+                                           data-toggle="building-{{ $building->id }}">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                            </svg>
+                                            {{ $building->name }}
+                                            <span class="arrow">▼</span>
+                                        </a>
+                                    </div>
+                                    <ul class="sub-menu" id="building-{{ $building->id }}">
                                         @if($building->corpuses && $building->corpuses->count() > 0)
                                             @foreach($building->corpuses as $corpus)
                                                 @if($corpus instanceof \App\Models\Corpus)
-                                                    <a href="#" data-filter="corpus_id" data-value="{{ $corpus->id }}"
-                                                        class="filter-link sub-link {{ request()->input('corpus_id') == $corpus->id ? 'active' : '' }}">
-
-                                                        {{ $corpus->name }}
-                                                    </a>
+                                                    <li class="menu-item">
+                                                        <div class="menu-toggle-wrapper">
+                                                            <a href="#" 
+                                                               data-filter="corpus_id" 
+                                                               data-value="{{ $corpus->id }}"
+                                                               class="filter-link toggle-link sub-link {{ request()->input('corpus_id') == $corpus->id ? 'active' : '' }}"
+                                                               data-toggle="corpus-{{ $corpus->id }}">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                                                    <path d="M3 9h18" />
+                                                                    <path d="M9 3v18" />
+                                                                </svg>
+                                                                {{ $corpus->name }}
+                                                                @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
+                                                                    <span class="arrow">▼</span>
+                                                                @endif
+                                                            </a>
+                                                        </div>
+                                                        @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
+                                                            <ul class="floor-sub-menu" id="corpus-{{ $corpus->id }}">
+                                                                @php
+                                                                    $floors = $corpus->corpusDepts->pluck('floor')->unique()->sort();
+                                                                @endphp
+                                                                @foreach($floors as $floorNumber)
+                                                                    <li>
+                                                                        <a href="#" 
+                                                                           data-filter="floor" 
+                                                                           data-value="{{ $floorNumber }}"
+                                                                           data-corpus-id="{{ $corpus->id }}"
+                                                                           class="filter-link floor-link {{ request()->input('floor') == $floorNumber && request()->input('corpus_id') == $corpus->id ? 'active' : '' }}">
+                                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                                <rect x="2" y="2" width="20" height="20" rx="2" />
+                                                                                <path d="M2 8h20" />
+                                                                            </svg>
+                                                                            {{ $floorNumber }} этаж
+                                                                        </a>
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
+                                                    </li>
                                                 @endif
                                             @endforeach
                                         @else
-                                            <span class="empty-message">Нет корпусов</span>
+                                            <li><span class="empty-message">Нет корпусов</span></li>
                                         @endif
-                                    </div>
+                                    </ul>
                                 </li>
                             @endif
                         @endforeach
@@ -94,7 +133,7 @@
                 <h6 class="filter-title">Отделения</h6>
                 <ul class="filter-menu">
                     <li>
-                        <a href="" data-reset="dept_id"
+                        <a href="#" data-reset="dept_id"
                             class="filter-link {{ !request()->input('dept_id') ? 'active' : '' }}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -107,29 +146,31 @@
                     </li>
                     @if($departments && $departments->count() > 0)
                         @foreach($departments as $typeName => $depts)
-                            <li>
-                                <a href="#dept-type-{{ Str::slug($typeName) }}" class="filter-link collapsed"
-                                    data-bs-toggle="collapse" role="button">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                    {{ $typeName ?: 'Без типа' }}
-                                    <span class="arrow">▼</span>
-                                </a>
-                                <div class="sub-menu collapse" id="dept-type-{{ Str::slug($typeName) }}">
+                            <li class="menu-item">
+                                <div class="menu-toggle-wrapper">
+                                    <a href="#" 
+                                       class="filter-link toggle-link"
+                                       data-toggle="dept-type-{{ Str::slug($typeName) }}">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                        </svg>
+                                        {{ $typeName ?: 'Без типа' }}
+                                        <span class="arrow">▼</span>
+                                    </a>
+                                </div>
+                                <ul class="sub-menu" id="dept-type-{{ Str::slug($typeName) }}">
                                     @foreach($depts as $dept)
                                         @if($dept instanceof \App\Models\Dept)
-                                            <a href="#" data-filter="dept_id" data-value="{{ $dept->id }}"
-                                                class="filter-link sub-link {{ request()->input('dept_id') == $dept->id ? 'active' : '' }}">
-                                                <!--
-                                                                    {{ $dept->name_short ?: $dept->name_full }}
-                                                                    -->
-                                                {{ $dept->name_full }}
-                                            </a>
+                                            <li>
+                                                <a href="#" data-filter="dept_id" data-value="{{ $dept->id }}"
+                                                    class="filter-link sub-link {{ request()->input('dept_id') == $dept->id ? 'active' : '' }}">
+                                                    {{ $dept->name_full }}
+                                                </a>
+                                            </li>
                                         @endif
                                     @endforeach
-                                </div>
+                                </ul>
                             </li>
                         @endforeach
                     @else
@@ -137,20 +178,17 @@
                     @endif
                 </ul>
             </div>
-
-
         </aside>
 
         <!-- Основной контент -->
         <main class="phone-book-content">
             <!-- Заголовок -->
             <div class="content-header">
-                <h2>Телефонный справочник</h2>
                 <span class="count-badge">{{ $workers->total() }} сотрудников</span>
             </div>
 
             <!-- Активные фильтры -->
-            @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id'))
+            @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id') || request()->input('floor'))
                 <div class="active-filters">
                     <span class="filter-label">Активные фильтры:</span>
                     @if(request()->input('search'))
@@ -190,132 +228,136 @@
                             </span>
                         @endif
                     @endif
+                    @if(request()->input('floor'))
+                        <span class="filter-tag filter-tag-floor">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="2" />
+                                <path d="M2 8h20" />
+                            </svg>
+                            {{ request()->input('floor') }} этаж
+                        </span>
+                    @endif
                 </div>
             @endif
 
             <!-- Список сотрудников в табличном виде -->
             @if($workers->count() > 0)
+                @php
+                    // Группируем сотрудников по отделам
+                    $groupedWorkers = $workers->groupBy(function ($worker) {
+                        $dept = $worker->deptWorkers->first()?->dept;
+                        return $dept ? $dept->id : 'no_dept';
+                    });
+                @endphp
+
+                @foreach($groupedWorkers as $deptId => $deptWorkers)
                     @php
-                        // Группируем сотрудников по отделам
-                        $groupedWorkers = $workers->groupBy(function ($worker) {
-                            $dept = $worker->deptWorkers->first()?->dept;
-                            return $dept ? $dept->id : 'no_dept';
-                        });
+                        $dept = $deptWorkers->first()->deptWorkers->first()?->dept;
+                        $deptName = $dept ? $dept->name_full : 'Без отдела';
+                        $deptShort = $dept ? $dept->name_short : 'Без отдела';
                     @endphp
 
-                    @foreach($groupedWorkers as $deptId => $deptWorkers)
-                        @php
-                            $dept = $deptWorkers->first()->deptWorkers->first()?->dept;
-                            $deptName = $dept ? $dept->name_full : 'Без отдела';
-                            $deptShort = $dept ? $dept->name_short : 'Без отдела';
-                        @endphp
-
-                        <div class="dept-table-wrapper">
-                            <div class="dept-table-header">
-                                <h3>{{ $deptName }}</h3>
-                                <span class="dept-count">{{ $deptWorkers->count() }} сотрудников</span>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="worker-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-worker">ФИО, должность</th>
-                                            <th class="col-location">Расположение</th>
-                                            <th class="col-phone">Местный</th>
-                                            <th class="col-phone">Городской</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($deptWorkers as $worker)
-                                            @php
-                                                $deptWorker = $worker->deptWorkers->first();
-                                                $position = $deptWorker?->position;
-
-                                                // Собираем локацию
-                                                $corpusDept = $deptWorker?->corpusDept;
-                                                $corpus = $corpusDept?->corpus;
-                                                $building = $corpus?->building;
-
-                                                $locationParts = [];
-                                                /*    if ($building)
-                                                        $locationParts[] = $building->name;*/
-                                                if ($corpus)
-                                                    $locationParts[] = $corpus->name;
-                                                if ($corpusDept && $corpusDept->floor)
-                                                    $locationParts[] = $corpusDept->floor . ' этаж';
-                                                if ($corpusDept && $corpusDept->sector)
-                                                    $locationParts[] = 'сектор ' . $corpusDept->sector;
-                                                $location = implode(' → ', $locationParts);
-
-                                                // Разделяем телефоны на местные и городские
-                                                $localPhones = [];
-                                                $cityPhones = [];
-                                                foreach ($worker->phones as $phone) {
-                                                    if ($phone->is_city_number) {
-                                                        $cityPhones[] = $phone->phone_number;
-                                                    } else {
-                                                        $localPhones[] = $phone->phone_number;
-                                                    }
-                                                }
-                                            @endphp
-                                            <tr>
-                                                <td class="col-worker">
-                                                    <div class="worker-name-cell">
-                                                        <strong>{{ $worker->name_full }}</strong>
-                                                        @if($position)
-                                                            <span class="worker-position">— {{ $position }}</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td class="col-location">
-                                                    @if($location)
-                                                        <span class="location-cell">
-
-                                                            {{ $location }}
-                                                        </span>
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                                <td class="col-phone">
-                                                    @if(count($localPhones) > 0)
-                                                        @foreach($localPhones as $phone)
-                                                            <a href="tel:{{ $phone }}" class="phone-link local-phone">
-                                                                {{ $phone }}
-                                                            </a>
-                                                        @endforeach
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                                <td class="col-phone">
-                                                    @if(count($cityPhones) > 0)
-                                                        @foreach($cityPhones as $phone)
-                                                            <a href="tel:{{ $phone }}" class="phone-link city-phone">
-                                                                {{ $phone }}
-                                                            </a>
-                                                        @endforeach
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="dept-table-wrapper">
+                        <div class="dept-table-header">
+                            <h3>{{ $deptName }}</h3>
+                            <span class="dept-count">{{ $deptWorkers->count() }} сотрудников</span>
                         </div>
-                    @endforeach
 
-                    <!-- Пагинация -->
-                    <div class="pagination-wrapper">
-                        {{ $workers->appends([
-                    'search' => request()->input('search'),
-                    'dept_id' => request()->input('dept_id'),
-                    'corpus_id' => request()->input('corpus_id')
-                ])->links() }}
+                        <div class="table-responsive">
+                            <table class="worker-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-worker">ФИО, должность</th>
+                                        <th class="col-location">Расположение</th>
+                                        <th class="col-phone">Местный</th>
+                                        <th class="col-phone">Городской</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($deptWorkers as $worker)
+                                        @php
+                                            $deptWorker = $worker->deptWorkers->first();
+                                            $position = $deptWorker?->position;
+
+                                            // Собираем локацию
+                                            $corpusDept = $deptWorker?->corpusDept;
+                                            $corpus = $corpusDept?->corpus;
+                                            $building = $corpus?->building;
+
+                                            $locationParts = [];
+                                            if ($corpus) $locationParts[] = $corpus->name;
+                                            if ($corpusDept && $corpusDept->floor) $locationParts[] = $corpusDept->floor . ' этаж';
+                                            if ($corpusDept && $corpusDept->sector) $locationParts[] = 'сектор ' . $corpusDept->sector;
+                                            $location = implode(' → ', $locationParts);
+
+                                            // Разделяем телефоны на местные и городские
+                                            $localPhones = [];
+                                            $cityPhones = [];
+                                            foreach ($worker->phones as $phone) {
+                                                if ($phone->is_city_number) {
+                                                    $cityPhones[] = $phone->phone_number;
+                                                } else {
+                                                    $localPhones[] = $phone->phone_number;
+                                                }
+                                            }
+                                        @endphp
+                                        <tr>
+                                            <td class="col-worker">
+                                                <div class="worker-name-cell">
+                                                    <strong>{{ $worker->name_full }}</strong>
+                                                    @if($position)
+                                                        <span class="worker-position">— {{ $position }}</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="col-location">
+                                                @if($location)
+                                                    <span class="location-cell">
+                                                        {{ $location }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="col-phone">
+                                                @if(count($localPhones) > 0)
+                                                    @foreach($localPhones as $phone)
+                                                        <a href="tel:{{ $phone }}" class="phone-link local-phone">
+                                                            {{ $phone }}
+                                                        </a>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="col-phone">
+                                                @if(count($cityPhones) > 0)
+                                                    @foreach($cityPhones as $phone)
+                                                        <a href="tel:{{ $phone }}" class="phone-link city-phone">
+                                                            {{ $phone }}
+                                                        </a>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                @endforeach
+
+                <!-- Пагинация -->
+                <div class="pagination-wrapper">
+                    {{ $workers->appends([
+                        'search' => request()->input('search'),
+                        'dept_id' => request()->input('dept_id'),
+                        'corpus_id' => request()->input('corpus_id'),
+                        'floor' => request()->input('floor')
+                    ])->links() }}
+                </div>
             @else
                 <div class="empty-state">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -340,14 +382,14 @@
     }
 
     /* ============================================
-   БОКОВОЕ МЕНЮ (без изменений)
+   БОКОВОЕ МЕНЮ
 ============================================ */
     .phone-book-sidebar {
         flex: 0 0 280px;
         position: sticky;
         top: 160px;
         max-height: calc(100vh - 160px);
-        overflow-x: auto;
+        overflow-y: auto;
         padding-right: 32px;
     }
 
@@ -440,8 +482,17 @@
         margin: 0;
     }
 
-    .filter-menu>li {
+    .filter-menu > li {
         margin-bottom: 2px;
+    }
+
+    .menu-item {
+        list-style: none;
+    }
+
+    .menu-toggle-wrapper {
+        display: flex;
+        align-items: center;
     }
 
     .filter-link {
@@ -458,6 +509,7 @@
         background: none;
         border: none;
         width: 100%;
+        user-select: none;
     }
 
     .filter-link:hover {
@@ -484,15 +536,24 @@
         margin-left: auto;
         font-size: 10px;
         color: #aaa;
-        transition: transform 0.3s;
+        transition: transform 0.3s ease;
     }
 
-    .filter-link:not(.collapsed) .arrow {
+    .filter-link .arrow.open {
         transform: rotate(180deg);
     }
 
     .sub-menu {
+        list-style: none;
         padding-left: 28px;
+        margin: 0;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+    }
+
+    .sub-menu.open {
+        max-height: 2000px;
     }
 
     .sub-link {
@@ -504,6 +565,40 @@
     .sub-link svg {
         width: 14px;
         height: 14px;
+    }
+
+    /* Этажи - последний уровень, не сворачивается */
+    .floor-sub-menu {
+        list-style: none;
+        padding-left: 28px;
+        margin: 0;
+        display: block;
+    }
+
+    .floor-sub-menu li {
+        margin-bottom: 1px;
+    }
+
+    .floor-link {
+        padding: 4px 12px 4px 28px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .floor-link svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .floor-link:hover {
+        background: #f0f4ff;
+        color: #2563eb;
+    }
+
+    .floor-link.active {
+        background: #e8edff;
+        color: #2563eb;
+        font-weight: 500;
     }
 
     .empty-message {
@@ -546,18 +641,11 @@
 
     .content-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
         margin-bottom: 20px;
         flex-wrap: wrap;
         gap: 10px;
-    }
-
-    .content-header h2 {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1a1a1a;
-        margin: 0;
     }
 
     .count-badge {
@@ -610,6 +698,11 @@
     .filter-tag-corpus {
         background: #dcfce7;
         color: #15803d;
+    }
+
+    .filter-tag-floor {
+        background: #fef3c7;
+        color: #d97706;
     }
 
     /* ============================================
@@ -724,11 +817,6 @@
         color: #555;
     }
 
-    .location-cell svg {
-        flex-shrink: 0;
-        color: #888;
-    }
-
     .phone-link {
         display: inline-block;
         padding: 2px 10px;
@@ -737,6 +825,26 @@
         text-decoration: none;
         transition: all 0.2s;
         margin: 1px 0;
+    }
+
+    .local-phone {
+        color: #0369a1;
+        background: #e0f2fe;
+    }
+
+    .local-phone:hover {
+        background: #bae6fd;
+        color: #0284c7;
+    }
+
+    .city-phone {
+        color: #15803d;
+        background: #dcfce7;
+    }
+
+    .city-phone:hover {
+        background: #bbf7d0;
+        color: #166534;
     }
 
     .text-muted {
@@ -839,10 +947,6 @@
             gap: 20px;
         }
 
-        .content-header h2 {
-            font-size: 20px;
-        }
-
         .dept-table-header {
             flex-direction: column;
             align-items: flex-start;
@@ -863,7 +967,6 @@
             padding: 8px 12px;
         }
 
-        /* На мобильных делаем таблицу более компактной */
         .col-worker {
             min-width: 140px;
         }
@@ -884,11 +987,6 @@
 
         .worker-position {
             font-size: 12px;
-        }
-
-        .worker-position::before {
-            content: '';
-            display: none;
         }
 
         .phone-link {
@@ -932,7 +1030,61 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // 1. ЛОГИКА РАСКРЫТИЯ/СВОРАЧИВАНИЯ МЕНЮ
+        // ============================================
+        
+        // Функция для переключения видимости подменю
+        function toggleSubMenu(toggleLink) {
+            const targetId = toggleLink.dataset.toggle;
+            if (!targetId) return;
+            
+            const subMenu = document.getElementById(targetId);
+            if (!subMenu) return;
+            
+            const arrow = toggleLink.querySelector('.arrow');
+            
+            // Переключаем класс open у подменю
+            subMenu.classList.toggle('open');
+            
+            // Переключаем класс open у стрелки
+            if (arrow) {
+                arrow.classList.toggle('open');
+            }
+        }
+        
+        // Обработка кликов по toggle-link
+        document.querySelectorAll('.toggle-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                // Предотвращаем фильтрацию при клике на стрелку
+                if (e.target.closest('.arrow')) {
+                    e.preventDefault();
+                }
+                
+                // Если это клик по самому элементу или по стрелке
+                if (e.target.closest('.arrow') || !e.target.closest('[data-filter]')) {
+                    e.preventDefault();
+                    toggleSubMenu(this);
+                    return;
+                }
+                
+                // Если есть data-filter - обрабатываем как фильтр
+                if (this.dataset.filter) {
+                    // Не предотвращаем для фильтров
+                    return;
+                }
+                
+                // Для обычных toggle (без data-filter)
+                e.preventDefault();
+                toggleSubMenu(this);
+            });
+        });
+        
+        // ============================================
+        // 2. ЛОГИКА ФИЛЬТРАЦИИ
+        // ============================================
+        
         // Функция для обновления URL с параметрами
         function updateUrl(params) {
             const url = new URL(window.location.href);
@@ -961,7 +1113,7 @@
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             let timeoutId;
-            searchInput.addEventListener('input', function () {
+            searchInput.addEventListener('input', function() {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => {
                     const params = getCurrentParams();
@@ -975,13 +1127,14 @@
             });
         }
 
-        // 2. Обработка кликов по фильтрам
-        document.querySelectorAll('[data-filter]').forEach(function (link) {
-            link.addEventListener('click', function (e) {
+        // 2. Обработка кликов по фильтрам (отделы, корпуса, этажи)
+        document.querySelectorAll('[data-filter]').forEach(function(link) {
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
 
                 const filterName = this.dataset.filter;
                 const filterValue = this.dataset.value;
+                const corpusId = this.dataset.corpusId;
                 const params = getCurrentParams();
 
                 const search = document.getElementById('searchInput')?.value;
@@ -989,6 +1142,11 @@
                     params.search = search;
                 } else {
                     delete params.search;
+                }
+
+                // Если это фильтр этажа, сохраняем также корпус
+                if (filterName === 'floor' && corpusId) {
+                    params.corpus_id = corpusId;
                 }
 
                 if (filterValue) {
@@ -1002,14 +1160,19 @@
         });
 
         // 3. Обработка сброса фильтров
-        document.querySelectorAll('[data-reset]').forEach(function (link) {
-            link.addEventListener('click', function (e) {
+        document.querySelectorAll('[data-reset]').forEach(function(link) {
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
 
                 const filterName = this.dataset.reset;
                 const params = getCurrentParams();
 
                 delete params[filterName];
+
+                // Если сбрасываем корпус, сбрасываем и этаж
+                if (filterName === 'corpus_id') {
+                    delete params.floor;
+                }
 
                 const search = document.getElementById('searchInput')?.value;
                 if (search) {
@@ -1023,18 +1186,76 @@
         });
 
         // 4. Обработка кнопки "Сбросить все"
-        document.querySelector('[data-reset-all]')?.addEventListener('click', function (e) {
+        document.querySelector('[data-reset-all]')?.addEventListener('click', function(e) {
             e.preventDefault();
             window.location.href = this.href;
         });
 
-        // 5. Раскрываем активные группы в меню
-        document.querySelectorAll('.collapse').forEach(function (collapse) {
-            if (collapse.querySelector('.filter-link.active')) {
-                const toggle = document.querySelector('[href="#' + collapse.id + '"]');
-                if (toggle) {
-                    toggle.classList.remove('collapsed');
-                    collapse.classList.add('show');
+        // ============================================
+        // 3. РАСКРЫТИЕ АКТИВНЫХ ЭЛЕМЕНТОВ ПРИ ЗАГРУЗКЕ
+        // ============================================
+        
+        // Рекурсивно раскрываем родительские элементы активного фильтра
+        function expandActiveParents(element) {
+            let parent = element.parentElement;
+            while (parent) {
+                // Проверяем, является ли родитель sub-menu или floor-sub-menu
+                if (parent.classList.contains('sub-menu') || parent.classList.contains('floor-sub-menu')) {
+                    parent.classList.add('open');
+                    
+                    // Находим toggle-link для этого подменю
+                    const toggleLink = document.querySelector(`[data-toggle="${parent.id}"]`);
+                    if (toggleLink) {
+                        const arrow = toggleLink.querySelector('.arrow');
+                        if (arrow) {
+                            arrow.classList.add('open');
+                        }
+                    }
+                }
+                parent = parent.parentElement;
+            }
+        }
+        
+        // Раскрываем все активные элементы
+        document.querySelectorAll('.filter-link.active').forEach(function(activeLink) {
+            expandActiveParents(activeLink);
+        });
+        
+        // Раскрываем корпуса с активными этажами
+        document.querySelectorAll('.floor-link.active').forEach(function(floorLink) {
+            // Находим родительский sub-menu (это floor-sub-menu)
+            const floorMenu = floorLink.closest('.floor-sub-menu');
+            if (floorMenu) {
+                floorMenu.classList.add('open');
+                
+                // Находим родительский sub-menu (это sub-menu корпуса)
+                const corpusMenu = floorMenu.closest('.sub-menu');
+                if (corpusMenu) {
+                    corpusMenu.classList.add('open');
+                    
+                    // Находим toggle-link для корпуса
+                    const toggleLink = document.querySelector(`[data-toggle="${corpusMenu.id}"]`);
+                    if (toggleLink) {
+                        const arrow = toggleLink.querySelector('.arrow');
+                        if (arrow) {
+                            arrow.classList.add('open');
+                        }
+                    }
+                    
+                    // Находим родительский sub-menu здания
+                    const buildingMenu = corpusMenu.closest('.sub-menu');
+                    if (buildingMenu) {
+                        buildingMenu.classList.add('open');
+                        
+                        // Находим toggle-link для здания
+                        const buildingToggle = document.querySelector(`[data-toggle="${buildingMenu.id}"]`);
+                        if (buildingToggle) {
+                            const arrow = buildingToggle.querySelector('.arrow');
+                            if (arrow) {
+                                arrow.classList.add('open');
+                            }
+                        }
+                    }
                 }
             }
         });

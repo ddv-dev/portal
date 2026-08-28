@@ -8,7 +8,6 @@ use App\Models\Dept;
 use App\Models\Corpus;
 use App\Models\Building;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class PhoneBookController extends Controller
@@ -21,6 +20,7 @@ class PhoneBookController extends Controller
         $search = $request->input('search');
         $deptId = $request->input('dept_id');
         $corpusId = $request->input('corpus_id');
+        $floor = $request->input('floor');
 
         // Получаем данные для меню
         try {
@@ -39,7 +39,12 @@ class PhoneBookController extends Controller
 
         try {
             $buildings = Building::with(['corpuses' => function($query) {
-                $query->whereHas('corpusDepts.dept.deptWorkers', function($q) {
+                $query->with(['corpusDepts' => function($q) {
+                    $q->select('corpus_id', 'floor')
+                        ->distinct()
+                        ->orderBy('floor');
+                }])
+                ->whereHas('corpusDepts.dept.deptWorkers', function($q) {
                     $q->whereHas('worker', function($w) {
                         $w->where('is_active', true);
                     });
@@ -93,6 +98,13 @@ class PhoneBookController extends Controller
             });
         }
 
+        // Фильтр по этажу
+        if ($floor) {
+            $workersQuery->whereHas('deptWorkers.corpusDept', function($query) use ($floor) {
+                $query->where('floor', $floor);
+            });
+        }
+
         // Сортировка по ФИО
         $workers = $workersQuery->orderBy('name_full')->paginate(50);
 
@@ -106,7 +118,8 @@ class PhoneBookController extends Controller
             'corpuses',
             'search',
             'deptId',
-            'corpusId'
+            'corpusId',
+            'floor'
         ));
     }
 
