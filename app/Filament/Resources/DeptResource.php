@@ -58,6 +58,31 @@ class DeptResource extends Resource
                         ]),
                     ]),
 
+                Section::make('Настройки отображения')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('spr_order')
+                                ->label('Порядок в справочнике')
+                                ->numeric()
+                                ->default(0)
+                                ->minValue(0)
+                                ->helperText('Чем меньше число, тем выше позиция в списке. 0 - в конце списка.'),
+                            
+                            Forms\Components\Placeholder::make('spr_order_hint')
+                                ->label('')
+                                ->content(function ($record) {
+                                    if (!$record) return 'При создании нового отдела установите значение';
+                                    
+                                    $count = Dept::where('spr_order', '<', $record->spr_order)->count();
+                                    if ($record->spr_order == 0) {
+                                        return '⚠️ Отдел будет отображаться в конце списка';
+                                    }
+                                    return "📌 Текущая позиция: {$count} место в списке (из " . Dept::count() . " отделов)";
+                                })
+                                ->columnSpanFull(),
+                        ]),
+                    ]),
+
                 Section::make('Сотрудники')
                     ->schema([
                         Forms\Components\Select::make('workers')
@@ -86,6 +111,14 @@ class DeptResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('spr_order')
+                    ->label('Порядок')
+                    ->sortable()
+                    ->toggleable()
+                    ->alignCenter()
+                    ->badge()
+                    ->color(fn ($state) => $state == 0 ? 'gray' : 'success'),
+
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
@@ -119,7 +152,7 @@ class DeptResource extends Resource
                     ->counts('corpuses')
                     ->sortable()
                     ->toggleable(),
-                // В таблице DeptResource
+
                 Tables\Columns\TextColumn::make('corpusDepts')
                     ->label('Расположение')
                     ->formatStateUsing(function ($record) {
@@ -151,7 +184,8 @@ class DeptResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('name_full');
+            ->defaultSort('spr_order', 'asc')
+            ->reorderable('spr_order');
     }
 
     public static function getRelations(): array

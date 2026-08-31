@@ -10,12 +10,16 @@ class Worker extends Model
         'name_full', 
         'birth_date', 
         'login_ad', 
-        'is_active'
+        'is_active',
+        'spr_order'
+        
     ];
 
     protected $casts = [
         'birth_date' => 'date',
         'is_active' => 'boolean',
+        'spr_order'=>'integer'
+
     ];
 
     public function deptWorkers()

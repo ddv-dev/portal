@@ -15,10 +15,14 @@ class Dept extends Model
         'name_full',
         'name_short',
         'description',
-        'type_id'
+        'type_id',
+        'spr_order'
     ];
     
     public $timestamps = false;
+    protected $casts =[
+        'spr_order'=>'integer',
+    ];
     
     /**
      * Тип отдела

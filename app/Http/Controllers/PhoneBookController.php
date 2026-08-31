@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class PhoneBookController extends Controller
 {
-    /**
-     * Главная страница телефонного справочника
-     */
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -25,11 +23,12 @@ class PhoneBookController extends Controller
         // Получаем данные для меню
         try {
             $departments = Dept::with(['type', 'corpusDepts.corpus.building'])
-                ->whereHas('deptWorkers', function($query) {
-                    $query->whereHas('worker', function($q) {
+                ->whereHas('deptWorkers', function ($query) {
+                    $query->whereHas('worker', function ($q) {
                         $q->where('is_active', true);
                     });
                 })
+                ->orderBy('spr_order')
                 ->get()
                 ->groupBy('type.name');
         } catch (\Exception $e) {
@@ -38,77 +37,76 @@ class PhoneBookController extends Controller
         }
 
         try {
-            $buildings = Building::with(['corpuses' => function($query) {
-                $query->with(['corpusDepts' => function($q) {
-                    $q->select('corpus_id', 'floor')
-                        ->distinct()
-                        ->orderBy('floor');
-                }])
-                ->whereHas('corpusDepts.dept.deptWorkers', function($q) {
-                    $q->whereHas('worker', function($w) {
-                        $w->where('is_active', true);
+            $buildings = Building::with([
+                'corpuses' => function ($query) {
+                    $query->with([
+                        'corpusDepts' => function ($q) {
+                            $q->select('corpus_id', 'floor')
+                                ->distinct()
+                                ->orderBy('floor');
+                        }
+                    ])
+                        ->whereHas('corpusDepts.dept.deptWorkers', function ($q) {
+                            $q->whereHas('worker', function ($w) {
+                                $w->where('is_active', true);
+                            });
+                        });
+                }
+            ])
+                ->whereHas('corpuses.corpusDepts.dept.deptWorkers', function ($query) {
+                    $query->whereHas('worker', function ($q) {
+                        $q->where('is_active', true);
                     });
-                });
-            }])
-            ->whereHas('corpuses.corpusDepts.dept.deptWorkers', function($query) {
-                $query->whereHas('worker', function($q) {
-                    $q->where('is_active', true);
-                });
-            })
-            ->get();
+                })
+                ->get();
         } catch (\Exception $e) {
             Log::error('Error loading buildings: ' . $e->getMessage());
             $buildings = collect();
         }
 
-        // Запрос на получение сотрудников
         $workersQuery = Worker::with([
             'deptWorkers.dept.type',
             'deptWorkers.corpusDept.corpus.building',
             'phones'
         ])
-        ->where('is_active', true);
+            ->where('is_active', true);
 
-        // Фильтр по поиску
         if ($search) {
-            $workersQuery->where(function($query) use ($search) {
+            $workersQuery->where(function ($query) use ($search) {
                 $query->where('name_full', 'ilike', "%{$search}%")
                     ->orWhere('login_ad', 'ilike', "%{$search}%")
-                    ->orWhereHas('phones', function($q) use ($search) {
+                    ->orWhereHas('phones', function ($q) use ($search) {
                         $q->where('phone_number', 'ilike', "%{$search}%");
                     })
-                    ->orWhereHas('deptWorkers.dept', function($q) use ($search) {
+                    ->orWhereHas('deptWorkers.dept', function ($q) use ($search) {
                         $q->where('name_full', 'ilike', "%{$search}%")
                             ->orWhere('name_short', 'ilike', "%{$search}%");
                     });
             });
         }
 
-        // Фильтр по отделу
         if ($deptId) {
-            $workersQuery->whereHas('deptWorkers', function($query) use ($deptId) {
+            $workersQuery->whereHas('deptWorkers', function ($query) use ($deptId) {
                 $query->where('dept_id', $deptId);
             });
         }
 
-        // Фильтр по корпусу
         if ($corpusId) {
-            $workersQuery->whereHas('deptWorkers.corpusDept', function($query) use ($corpusId) {
+            $workersQuery->whereHas('deptWorkers.corpusDept', function ($query) use ($corpusId) {
                 $query->where('corpus_id', $corpusId);
             });
         }
 
-        // Фильтр по этажу
         if ($floor) {
-            $workersQuery->whereHas('deptWorkers.corpusDept', function($query) use ($floor) {
+            $workersQuery->whereHas('deptWorkers.corpusDept', function ($query) use ($floor) {
                 $query->where('floor', $floor);
             });
         }
 
-        // Сортировка по ФИО
-        $workers = $workersQuery->orderBy('name_full')->paginate(50);
+        $workers = $workersQuery
+            ->orderBy('spr_order')
+            ->orderBy('name_full')->paginate(50);
 
-        // Получаем все корпуса для фильтра
         $corpuses = Corpus::with('building')->get();
 
         return view('directory', compact(
@@ -123,9 +121,6 @@ class PhoneBookController extends Controller
         ));
     }
 
-    /**
-     * API для поиска сотрудников (для AJAX)
-     */
     public function search(Request $request)
     {
         $query = $request->input('q');
@@ -139,30 +134,30 @@ class PhoneBookController extends Controller
             'deptWorkers.corpusDept.corpus.building',
             'phones'
         ])
-        ->where('is_active', true)
-        ->where(function($q) use ($query) {
-            $q->where('name_full', 'ilike', "%{$query}%")
-                ->orWhere('login_ad', 'ilike', "%{$query}%")
-                ->orWhereHas('phones', function($phoneQuery) use ($query) {
-                    $phoneQuery->where('phone_number', 'ilike', "%{$query}%");
-                })
-                ->orWhereHas('deptWorkers.dept', function($deptQuery) use ($query) {
-                    $deptQuery->where('name_full', 'ilike', "%{$query}%")
-                        ->orWhere('name_short', 'ilike', "%{$query}%");
-                });
-        })
-        ->limit(20)
-        ->get()
-        ->map(function($worker) {
-            return [
-                'id' => $worker->id,
-                'name' => $worker->name_full,
-                'position' => $worker->deptWorkers->first()?->position,
-                'department' => $worker->deptWorkers->first()?->dept?->name_full,
-                'phones' => $worker->phones->pluck('phone_number'),
-                'location' => $this->getWorkerLocation($worker),
-            ];
-        });
+            ->where('is_active', true)
+            ->where(function ($q) use ($query) {
+                $q->where('name_full', 'ilike', "%{$query}%")
+                    ->orWhere('login_ad', 'ilike', "%{$query}%")
+                    ->orWhereHas('phones', function ($phoneQuery) use ($query) {
+                        $phoneQuery->where('phone_number', 'ilike', "%{$query}%");
+                    })
+                    ->orWhereHas('deptWorkers.dept', function ($deptQuery) use ($query) {
+                        $deptQuery->where('name_full', 'ilike', "%{$query}%")
+                            ->orWhere('name_short', 'ilike', "%{$query}%");
+                    });
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($worker) {
+                return [
+                    'id' => $worker->id,
+                    'name' => $worker->name_full,
+                    'position' => $worker->deptWorkers->first()?->position,
+                    'department' => $worker->deptWorkers->first()?->dept?->name_full,
+                    'phones' => $worker->phones->pluck('phone_number'),
+                    'location' => $this->getWorkerLocation($worker),
+                ];
+            });
 
         return response()->json($workers);
     }

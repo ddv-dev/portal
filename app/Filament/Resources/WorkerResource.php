@@ -57,6 +57,25 @@ class WorkerResource extends Resource
                         ]),
                     ]),
 
+                // Добавляем секцию с spr_order
+                Section::make('Настройки отображения')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('spr_order')
+                                ->label('Порядок в справочнике')
+                                ->numeric()
+                                ->default(0)
+                                ->minValue(0)
+                                ->helperText('Чем меньше число, тем выше позиция в списке. 0 - в конце списка.'),
+                            
+                            Forms\Components\Placeholder::make('spr_order_hint')
+                                ->label(' ')
+                                ->content('Используется для сортировки сотрудников внутри отдела в телефонном справочнике'),
+                        ]),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
                 Section::make('Местоположение и должность')
                     ->schema([
                         Repeater::make('deptWorkers')
@@ -166,6 +185,13 @@ class WorkerResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
+                // Добавляем колонку spr_order
+                Tables\Columns\TextColumn::make('spr_order')
+                    ->label('Порядок')
+                    ->sortable()
+                    ->toggleable()
+                    ->alignCenter(),
+
                 Tables\Columns\TextColumn::make('deptWorkers')
                     ->label('Отделы и местоположение')
                     ->formatStateUsing(function ($record) {
@@ -243,8 +269,10 @@ class WorkerResource extends Resource
                         ->label('Удалить выбранные'),
                 ]),
             ])
-            ->searchable()
-            ->defaultSort('name_full');
+            // Сортировка по умолчанию - сначала по spr_order, затем по имени
+            ->defaultSort('spr_order', 'asc')
+            ->defaultSort('name_full', 'asc')
+            ->searchable();
     }
 
     public static function getRelations(): array
