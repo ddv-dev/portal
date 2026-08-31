@@ -48,7 +48,7 @@ class WorkerResource extends Resource
                             Forms\Components\TextInput::make('login_ad')
                                 ->label('Логин AD')
                                 ->maxLength(1000)
-                                ->placeholder('ivanov.i'),
+                                ->placeholder('i.ivanov'),
 
                             Forms\Components\Toggle::make('is_active')
                                 ->label('Активен')
@@ -57,7 +57,6 @@ class WorkerResource extends Resource
                         ]),
                     ]),
 
-                // Добавляем секцию с spr_order
                 Section::make('Настройки отображения')
                     ->schema([
                         Grid::make(2)->schema([
@@ -67,7 +66,7 @@ class WorkerResource extends Resource
                                 ->default(0)
                                 ->minValue(0)
                                 ->helperText('Чем меньше число, тем выше позиция в списке. 0 - в конце списка.'),
-                            
+
                             Forms\Components\Placeholder::make('spr_order_hint')
                                 ->label(' ')
                                 ->content('Используется для сортировки сотрудников внутри отдела в телефонном справочнике'),
@@ -95,7 +94,7 @@ class WorkerResource extends Resource
                                         ->afterStateUpdated(function ($state, callable $set) {
                                             $set('corpus_dept_id', null);
                                         }),
-                                    
+
                                     // Конкретное местоположение из corpus_depts
                                     Select::make('corpus_dept_id')
                                         ->label('Корпус / Этаж / Сектор')
@@ -104,7 +103,7 @@ class WorkerResource extends Resource
                                             if (!$deptId) {
                                                 return [];
                                             }
-                                            
+
                                             return CorpusDept::with(['corpus', 'dept'])
                                                 ->where('dept_id', $deptId)
                                                 ->get()
@@ -121,7 +120,7 @@ class WorkerResource extends Resource
                                         ->preload()
                                         ->placeholder('Сначала выберите отдел')
                                         ->helperText('Выберите конкретное расположение отдела (корпус, этаж, сектор)'),
-                                    
+
                                     Forms\Components\TextInput::make('position')
                                         ->label('Должность')
                                         ->maxLength(1000)
@@ -130,7 +129,8 @@ class WorkerResource extends Resource
                             ])
                             ->defaultItems(0)
                             ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => 
+                            ->itemLabel(
+                                fn(array $state): ?string =>
                                 Dept::find($state['dept_id'])?->name_full ?? 'Новый отдел'
                             )
                             ->createItemButtonLabel('Добавить отдел')
@@ -197,7 +197,7 @@ class WorkerResource extends Resource
                     ->formatStateUsing(function ($record) {
                         return $record->deptWorkers->map(function ($dw) {
                             $deptName = $dw->dept?->name_short ?? $dw->dept?->name_full ?? 'Удален';
-                            
+
                             // Информация о местоположении
                             $location = '';
                             if ($dw->corpusDept) {
@@ -206,7 +206,7 @@ class WorkerResource extends Resource
                                 $sector = $dw->corpusDept->sector ? "сек. {$dw->corpusDept->sector}" : '';
                                 $location = implode(' | ', array_filter([$corpus, $floor, $sector]));
                             }
-                            
+
                             $position = $dw->position ? "({$dw->position})" : '';
                             return trim(implode(' ', array_filter([$deptName, $location, $position])));
                         })->implode("\n");

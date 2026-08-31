@@ -3,12 +3,7 @@
 
 @push('scripts')
     @vite('resources/js/directory.js')
-    {{-- Добавим для отладки --}}
-    <script>
-        console.log('Script block from Blade');
-    </script>
 @endpush
-
 
 @section('title', 'Телефонный справочник')
 
@@ -18,173 +13,179 @@
         <aside class="phone-book-sidebar">
             <!-- Поиск -->
             <div class="search-box">
+                <span class="section-title-2">Поиск</span>
                 <form method="GET" action="{{ route('directory') }}" id="searchForm">
                     <div class="search-input-group">
                         <input type="text" name="search" class="search-input"
                             placeholder="Поиск по ФИО, отделу, телефону..." value="{{ request()->input('search') }}"
                             id="searchInput">
-                        <button class="search-btn" type="submit">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <path d="M21 21l-4.35-4.35" />
-                            </svg>
+                        <button class="button button--secondary" type="submit">
+                            Найти
                         </button>
+                        @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id') || request()->input('floor'))
+                            <div class="reset-wrapper">
+                                <a href="{{ route('directory') }}" class="reset-btn" data-reset-all>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Сбросить все фильтры
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </form>
             </div>
-            <!-- Сброс фильтров -->
-            @if(request()->input('search') || request()->input('dept_id') || request()->input('corpus_id') || request()->input('floor'))
-                <div class="reset-wrapper">
-                    <a href="{{ route('directory') }}" class="reset-btn" data-reset-all>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                        Сбросить все фильтры
-                    </a>
-                </div>
-            @endif
 
             <!-- Местоположение -->
-            <div class="filter-section">
-                <h6 class="filter-title">Местоположение</h6>
-                <ul class="filter-menu">
-                    <li>
-                        <a href="#" data-reset="corpus_id" data-reset-floor="floor"
-                            class="filter-link {{ !request()->input('corpus_id') && !request()->input('floor') ? 'active' : '' }}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="2" y="2" width="20" height="20" rx="2" />
-                                <path d="M2 8h20" />
-                                <path d="M8 2v20" />
-                            </svg>
-                            Все здания
-                        </a>
-                    </li>
-                    @if($buildings && $buildings->count() > 0)
-                        @foreach($buildings as $building)
-                            @if($building instanceof \App\Models\Building)
+
+            <div class="column-group">
+                <span class="section-title-2">Меню</span>
+
+                <div class="filter-section">
+                    <h6 class="filter-title">Местоположение</h6>
+                    <ul class="filter-menu">
+                        <li>
+                            <a href="#" data-reset="corpus_id" data-reset-floor="floor"
+                                class="filter-link {{ !request()->input('corpus_id') && !request()->input('floor') ? 'active' : '' }}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="2" />
+                                    <path d="M2 8h20" />
+                                    <path d="M8 2v20" />
+                                </svg>
+                                Все здания
+                            </a>
+                        </li>
+                        @if($buildings && $buildings->count() > 0)
+                            @foreach($buildings as $building)
+                                @if($building instanceof \App\Models\Building)
+                                    <li class="menu-item">
+                                        <div class="menu-toggle-wrapper">
+                                            <a href="#"
+                                                class="filter-link toggle-link {{ request()->input('corpus_id') && $building->corpuses->contains('id', request()->input('corpus_id')) ? 'active' : '' }}"
+                                                data-toggle="building-{{ $building->id }}">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2">
+                                                    <path
+                                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                                    </path>
+                                                </svg>
+                                                {{ $building->name }}
+                                                <span class="arrow">▼</span>
+                                            </a>
+                                        </div>
+                                        <ul class="sub-menu" id="building-{{ $building->id }}">
+                                            @if($building->corpuses && $building->corpuses->count() > 0)
+                                                @foreach($building->corpuses as $corpus)
+                                                    @if($corpus instanceof \App\Models\Corpus)
+                                                        <li class="menu-item">
+                                                            <div class="menu-toggle-wrapper">
+                                                                <a href="#" data-filter="corpus_id" data-value="{{ $corpus->id }}"
+                                                                    class="filter-link toggle-link sub-link {{ request()->input('corpus_id') == $corpus->id ? 'active' : '' }}"
+                                                                    data-toggle="corpus-{{ $corpus->id }}">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2">
+                                                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                                                        <path d="M3 9h18" />
+                                                                        <path d="M9 3v18" />
+                                                                    </svg>
+                                                                    {{ $corpus->name }}
+                                                                    @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
+                                                                        <span class="arrow">▼</span>
+                                                                    @endif
+                                                                </a>
+                                                            </div>
+                                                            @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
+                                                                <ul class="floor-sub-menu" id="corpus-{{ $corpus->id }}">
+                                                                    @php
+                                                                        $floors = $corpus->corpusDepts->pluck('floor')->unique()->sort();
+                                                                    @endphp
+                                                                    @foreach($floors as $floorNumber)
+                                                                        <li>
+                                                                            <a href="#" data-filter="floor" data-value="{{ $floorNumber }}"
+                                                                                data-corpus-id="{{ $corpus->id }}"
+                                                                                class="filter-link floor-link {{ request()->input('floor') == $floorNumber && request()->input('corpus_id') == $corpus->id ? 'active' : '' }}">
+                                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                                                    stroke="currentColor" stroke-width="2">
+                                                                                    <rect x="2" y="2" width="20" height="20" rx="2" />
+                                                                                    <path d="M2 8h20" />
+                                                                                </svg>
+                                                                                {{ $floorNumber }} этаж
+                                                                            </a>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @endif
+                                                        </li>
+                                                    @endif
+                                                @endforeach
+                                            @else
+                                                <li><span class="empty-message">Нет корпусов</span></li>
+                                            @endif
+                                        </ul>
+                                    </li>
+                                @endif
+                            @endforeach
+                        @else
+                            <li><span class="empty-message">Нет зданий</span></li>
+                        @endif
+                    </ul>
+                </div>
+
+                <!-- Отделения -->
+                <div class="filter-section">
+                    <h6 class="filter-title">Отделения</h6>
+                    <ul class="filter-menu">
+                        <li>
+                            <a href="#" data-reset="dept_id"
+                                class="filter-link {{ !request()->input('dept_id') ? 'active' : '' }}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="2" />
+                                    <path d="M2 8h20" />
+                                    <path d="M8 2v20" />
+                                </svg>
+                                Все отделы
+                            </a>
+                        </li>
+                        @if($departments && $departments->count() > 0)
+                            @foreach($departments as $typeName => $depts)
                                 <li class="menu-item">
                                     <div class="menu-toggle-wrapper">
-                                        <a href="#"
-                                            class="filter-link toggle-link {{ request()->input('corpus_id') && $building->corpuses->contains('id', request()->input('corpus_id')) ? 'active' : '' }}"
-                                            data-toggle="building-{{ $building->id }}">
+                                        <a href="#" class="filter-link toggle-link"
+                                            data-toggle="dept-type-{{ Str::slug($typeName) }}">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2">
-                                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                                                </path>
+                                                <path
+                                                    d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                                             </svg>
-                                            {{ $building->name }}
+                                            {{ $typeName ?: 'Без типа' }}
                                             <span class="arrow">▼</span>
                                         </a>
                                     </div>
-                                    <ul class="sub-menu" id="building-{{ $building->id }}">
-                                        @if($building->corpuses && $building->corpuses->count() > 0)
-                                            @foreach($building->corpuses as $corpus)
-                                                @if($corpus instanceof \App\Models\Corpus)
-                                                    <li class="menu-item">
-                                                        <div class="menu-toggle-wrapper">
-                                                            <a href="#" data-filter="corpus_id" data-value="{{ $corpus->id }}"
-                                                                class="filter-link toggle-link sub-link {{ request()->input('corpus_id') == $corpus->id ? 'active' : '' }}"
-                                                                data-toggle="corpus-{{ $corpus->id }}">
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                                    stroke-width="2">
-                                                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                                                    <path d="M3 9h18" />
-                                                                    <path d="M9 3v18" />
-                                                                </svg>
-                                                                {{ $corpus->name }}
-                                                                @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
-                                                                    <span class="arrow">▼</span>
-                                                                @endif
-                                                            </a>
-                                                        </div>
-                                                        @if($corpus->corpusDepts && $corpus->corpusDepts->count() > 0)
-                                                            <ul class="floor-sub-menu" id="corpus-{{ $corpus->id }}">
-                                                                @php
-                                                                    $floors = $corpus->corpusDepts->pluck('floor')->unique()->sort();
-                                                                @endphp
-                                                                @foreach($floors as $floorNumber)
-                                                                    <li>
-                                                                        <a href="#" data-filter="floor" data-value="{{ $floorNumber }}"
-                                                                            data-corpus-id="{{ $corpus->id }}"
-                                                                            class="filter-link floor-link {{ request()->input('floor') == $floorNumber && request()->input('corpus_id') == $corpus->id ? 'active' : '' }}">
-                                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                                                stroke="currentColor" stroke-width="2">
-                                                                                <rect x="2" y="2" width="20" height="20" rx="2" />
-                                                                                <path d="M2 8h20" />
-                                                                            </svg>
-                                                                            {{ $floorNumber }} этаж
-                                                                        </a>
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                        @endif
-                                                    </li>
-                                                @endif
-                                            @endforeach
-                                        @else
-                                            <li><span class="empty-message">Нет корпусов</span></li>
-                                        @endif
+                                    <ul class="sub-menu" id="dept-type-{{ Str::slug($typeName) }}">
+                                        @foreach($depts as $dept)
+                                            @if($dept instanceof \App\Models\Dept)
+                                                <li>
+                                                    <a href="#" data-filter="dept_id" data-value="{{ $dept->id }}"
+                                                        class="filter-link sub-link {{ request()->input('dept_id') == $dept->id ? 'active' : '' }}">
+                                                        {{ $dept->name_full }}
+                                                    </a>
+                                                </li>
+                                            @endif
+                                        @endforeach
                                     </ul>
                                 </li>
-                            @endif
-                        @endforeach
-                    @else
-                        <li><span class="empty-message">Нет зданий</span></li>
-                    @endif
-                </ul>
+                            @endforeach
+                        @else
+                            <li><span class="empty-message">Нет отделов</span></li>
+                        @endif
+                    </ul>
+                </div>
             </div>
 
-            <!-- Отделения -->
-            <div class="filter-section">
-                <h6 class="filter-title">Отделения</h6>
-                <ul class="filter-menu">
-                    <li>
-                        <a href="#" data-reset="dept_id"
-                            class="filter-link {{ !request()->input('dept_id') ? 'active' : '' }}">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="2" y="2" width="20" height="20" rx="2" />
-                                <path d="M2 8h20" />
-                                <path d="M8 2v20" />
-                            </svg>
-                            Все отделы
-                        </a>
-                    </li>
-                    @if($departments && $departments->count() > 0)
-                        @foreach($departments as $typeName => $depts)
-                            <li class="menu-item">
-                                <div class="menu-toggle-wrapper">
-                                    <a href="#" class="filter-link toggle-link" data-toggle="dept-type-{{ Str::slug($typeName) }}">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
-                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                                        </svg>
-                                        {{ $typeName ?: 'Без типа' }}
-                                        <span class="arrow">▼</span>
-                                    </a>
-                                </div>
-                                <ul class="sub-menu" id="dept-type-{{ Str::slug($typeName) }}">
-                                    @foreach($depts as $dept)
-                                        @if($dept instanceof \App\Models\Dept)
-                                            <li>
-                                                <a href="#" data-filter="dept_id" data-value="{{ $dept->id }}"
-                                                    class="filter-link sub-link {{ request()->input('dept_id') == $dept->id ? 'active' : '' }}">
-                                                    {{ $dept->name_full }}
-                                                </a>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            </li>
-                        @endforeach
-                    @else
-                        <li><span class="empty-message">Нет отделов</span></li>
-                    @endif
-                </ul>
-            </div>
         </aside>
 
         <!-- Основной контент -->
@@ -263,12 +264,12 @@
                             $deptName = $dept ? $dept->name_full : 'Без отдела';
                             $deptShort = $dept ? $dept->name_short : 'Без отдела';
                         @endphp
-
+                        <div class="section-title-1 mb-4">
+                            {{ $deptName }}
+                            <!--   <span class="dept-count">{{ $deptWorkers->count() }} сотрудников</span>-->
+                        </div>
                         <div class="dept-table-wrapper">
-                            <div class="dept-table-header">
-                                <h3>{{ $deptName }}</h3>
-                                <span class="dept-count">{{ $deptWorkers->count() }} сотрудников</span>
-                            </div>
+
 
                             <div class="table-responsive">
                                 <table class="worker-table">
@@ -381,4 +382,3 @@
         </main>
     </div>
 @endsection
-

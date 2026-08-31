@@ -1,0 +1,12 @@
+.section-title-1 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin: 0;
+}
+
+.section-title-2 {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: #1C212E;
+}

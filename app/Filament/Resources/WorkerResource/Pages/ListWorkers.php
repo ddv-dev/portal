@@ -13,7 +13,10 @@ class ListWorkers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+            ->label('Добавить сотруднкиа')
+            ->tooltip('Зарегестрировать нового сотрудника')
+            ->icon('heroicon-o-plus'),
         ];
     }
 }

@@ -4,7 +4,7 @@
    ============================================ */
 
 .container {
-    max-width: 1200px;
+    max-width: 90vw;
     margin: 0 auto;
     padding: 0 var(--spacing-md);
 }
@@ -69,4 +69,14 @@
     .grid--4 {
         grid-template-columns: 1fr;
     }
+}
+
+.column-group{
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+    border-radius: var(--border-radius-base);
+    border: 1px solid var(--color-border);
 }

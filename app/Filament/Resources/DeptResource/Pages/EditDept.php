@@ -13,7 +13,18 @@ class EditDept extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()->label('Удалить отдел'),
+        ];
+    }
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getSaveFormAction()->label('Сохранить изменения')
+                ->icon('heroicon-o-check')
+                ->color('success'),
+            $this->getCancelFormAction()->label('Отменить')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray'),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DeptResource\Pages;
 use App\Models\Dept;
 use App\Models\DeptType;
+use App\Models\Corpus;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +13,15 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Placeholder;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 
 class DeptResource extends Resource
 {
@@ -54,7 +64,6 @@ class DeptResource extends Resource
                                 ->maxLength(1000)
                                 ->rows(3)
                                 ->placeholder('Краткое описание отдела'),
-
                         ]),
                     ]),
 
@@ -83,6 +92,60 @@ class DeptResource extends Resource
                         ]),
                     ]),
 
+                Section::make('Расположение по корпусам')
+                    ->schema([
+                        Repeater::make('corpusDepts')
+                            ->label('Корпуса и местоположение')
+                            ->relationship('corpusDepts')
+                            ->schema([
+                                Grid::make(3)->schema([
+                                    Select::make('corpus_id')
+                                        ->label('Корпус')
+                                        ->options(function () {
+                                            return Corpus::with('building')
+                                                ->get()
+                                                ->mapWithKeys(function ($item) {
+                                                    $buildingName = $item->building?->name ?? 'Без здания';
+                                                    return [$item->id => "{$item->name} ({$buildingName})"];
+                                                })
+                                                ->toArray();
+                                        })
+                                        ->required()
+                                        ->searchable()
+                                        ->preload()
+                                        ->placeholder('Выберите корпус')
+                                        ->helperText('Выберите корпус, где находится отдел'),
+                                    
+                                    TextInput::make('floor')
+                                        ->label('Этаж')
+                                        ->numeric()
+                                        ->minValue(-10)
+                                        ->maxValue(99)
+                                        ->step(1)
+                                        ->default(null)
+                                        ->placeholder('Например: -1, 0, 1, 5')
+                                        ->helperText('Отрицательные значения для подземных этажей'),
+                                    
+                                    TextInput::make('sector')
+                                        ->label('Сектор')
+                                        ->maxLength(100)
+                                        ->placeholder('Например: A, B, лифт №1')
+                                        ->helperText('Ближайший лифт или сектор'),
+                                ]),
+                            ])
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string => 
+                                Corpus::find($state['corpus_id'])?->name ?? 'Новый корпус'
+                            )
+                            ->createItemButtonLabel('Добавить корпус')
+                            ->columns(1)
+                            ->orderable(false)
+                            ->columnSpan('full'),
+                    ])
+                    ->collapsible()
+                    ->collapsed(fn ($record) => !$record || $record->corpusDepts->count() === 0),
+
                 Section::make('Сотрудники')
                     ->schema([
                         Forms\Components\Select::make('workers')
@@ -92,17 +155,6 @@ class DeptResource extends Resource
                             ->preload()
                             ->searchable()
                             ->placeholder('Добавьте сотрудников'),
-                    ]),
-
-                Section::make('Расположение')
-                    ->schema([
-                        Forms\Components\Select::make('corpuses')
-                            ->label('Корпуса')
-                            ->relationship('corpuses', 'name')
-                            ->multiple()
-                            ->preload()
-                            ->searchable()
-                            ->placeholder('Выберите корпуса'),
                     ]),
             ]);
     }
@@ -147,32 +199,78 @@ class DeptResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('corpuses_count')
-                    ->label('Корпусов')
-                    ->counts('corpuses')
-                    ->sortable()
-                    ->toggleable(),
-
+                // ✅ Улучшенное отображение расположения
                 Tables\Columns\TextColumn::make('corpusDepts')
                     ->label('Расположение')
                     ->formatStateUsing(function ($record) {
                         return $record->corpusDepts->map(function ($item) {
-                            $corpusName = $item->corpus?->name ?? 'Удален';
-                            $floor = $item->floor ? "эт. {$item->floor}" : '';
+                            $corpusName = $item->corpus?->name ?? '❌ Удален';
+                            $buildingName = $item->corpus?->building?->name ?? '';
+                            
+                            // Форматирование этажа
+                            $floor = '';
+                            if ($item->floor !== null) {
+                                $floorNumber = $item->floor;
+                                if ($floorNumber < 0) {
+                                    $floor = "подв. эт. {$floorNumber}";
+                                } elseif ($floorNumber == 0) {
+                                    $floor = "цоколь";
+                                } else {
+                                    $floor = "эт. {$floorNumber}";
+                                }
+                            }
+                            
                             $sector = $item->sector ? "сек. {$item->sector}" : '';
-                            $parts = array_filter([$corpusName, $floor, $sector]);
+                            $parts = array_filter([$corpusName, $buildingName, $floor, $sector]);
                             return implode(' | ', $parts);
-                        })->implode(', ');
+                        })->implode("\n");
                     })
+                    ->html()
                     ->limit(50)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('corpusDepts_count')
+                    ->label('Корпусов')
+                    ->counts('corpusDepts')
+                    ->sortable()
+                    ->badge()
+                    ->color('success')
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type_id')
+                SelectFilter::make('type_id')
                     ->label('Тип отдела')
                     ->relationship('type', 'name')
                     ->preload()
                     ->searchable(),
+
+                // ✅ ИСПРАВЛЕННЫЙ фильтр по корпусу
+                SelectFilter::make('corpus')
+                    ->label('Корпус')
+                    ->options(function () {
+                        return Corpus::with('building')
+                            ->get()
+                            ->mapWithKeys(function ($item) {
+                                $buildingName = $item->building?->name ?? 'Без здания';
+                                return [$item->id => "{$item->name} ({$buildingName})"];
+                            })
+                            ->toArray();
+                    })
+                    ->preload()
+                    ->searchable()
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (isset($data['value']) && $data['value'] !== null) {
+                            return $query->whereHas('corpusDepts', function (Builder $q) use ($data) {
+                                $q->where('corpus_id', $data['value']);
+                            });
+                        }
+                        return $query;
+                    }),
+
+                Filter::make('has_corpus')
+                    ->label('Есть расположение')
+                    ->query(fn (Builder $query): Builder => $query->whereHas('corpusDepts'))
+                    ->toggle(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

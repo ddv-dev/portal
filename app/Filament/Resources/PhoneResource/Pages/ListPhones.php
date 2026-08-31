@@ -13,7 +13,11 @@ class ListPhones extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Добавить телефон')
+                ->tooltip('Зарегестрировать новый телефон')
+                ->icon('heroicon-o-plus'),
         ];
     }
+
 }

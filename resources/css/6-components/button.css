@@ -40,8 +40,8 @@
 
 /* --- Вторичная кнопка (светлая) --- */
 .button--secondary {
-    background-color: var(--color-bg-card);  /* #FFFFFF */
-    color: var(--color-primary);  /* #4668AA */
+    background-color: var(--color-primary);  /* #FFFFFF */
+    color: var(--color-text-inverse);
     border: 2px solid var(--color-primary);
 }
 

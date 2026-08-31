@@ -51,11 +51,11 @@ class PhoneResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+           /*     Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(),
-
+*/
                 Tables\Columns\TextColumn::make('phone_number')
                     ->label('Номер телефона')
                     ->searchable()
@@ -86,12 +86,15 @@ class PhoneResource extends Resource
                     ->toggle(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Редактировать'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Удалить')
+                ,
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()->label('Удалить выбранные'),
                 ]),
             ])
             ->defaultSort('phone_number');
