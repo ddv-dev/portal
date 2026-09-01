@@ -8,9 +8,9 @@
 @section('title', 'Телефонный справочник')
 
 @section('content')
-    <div class="phone-book-wrapper">
+    <div class="content-wrapper">
         <!-- Левое меню -->
-        <aside class="phone-book-sidebar">
+        <aside class="sidebar-1">
             <!-- Поиск -->
             <div class="search-box">
                 <span class="section-title-2">Поиск</span>
@@ -39,7 +39,6 @@
             </div>
 
             <!-- Местоположение -->
-
             <div class="column-group">
                 <span class="section-title-2">Меню</span>
 
@@ -185,11 +184,10 @@
                     </ul>
                 </div>
             </div>
-
         </aside>
 
         <!-- Основной контент -->
-        <main class="phone-book-content">
+        <main class="main-content-1">
             <!-- Заголовок -->
             <div class="content-header">
                 <span class="count-badge">{{ $workers->total() }} сотрудников</span>
@@ -250,125 +248,145 @@
 
             <!-- Список сотрудников в табличном виде -->
             @if($workers->count() > 0)
+                @php
+                    // Группируем сотрудников по отделам, сохраняя правильную сортировку
+                    $groupedWorkers = collect();
+                    
+                    foreach($workers as $worker) {
+                        $deptWorker = $worker->deptWorkers->first();
+                        $dept = $deptWorker ? $deptWorker->dept : null;
+                        $deptId = $dept ? $dept->id : 'no_dept';
+                        
+                        if (!$groupedWorkers->has($deptId)) {
+                            $groupedWorkers[$deptId] = collect();
+                        }
+                        $groupedWorkers[$deptId]->push($worker);
+                    }
+                    
+                    // Сортируем группы по spr_order отдела (по возрастанию)
+                    $groupedWorkers = $groupedWorkers->sortBy(function ($group) {
+                        $dept = $group->first()->deptWorkers->first()?->dept;
+                        return $dept ? (int)$dept->spr_order : PHP_INT_MAX;
+                    });
+                @endphp
+
+                @foreach($groupedWorkers as $deptId => $deptWorkers)
                     @php
-                        // Группируем сотрудников по отделам
-                        $groupedWorkers = $workers->groupBy(function ($worker) {
-                            $dept = $worker->deptWorkers->first()?->dept;
-                            return $dept ? $dept->id : 'no_dept';
+                        $dept = $deptWorkers->first()->deptWorkers->first()?->dept;
+                        $deptName = $dept ? $dept->name_full : 'Без отдела';
+                        $deptShort = $dept ? $dept->name_short : 'Без отдела';
+                        $deptSprOrder = $dept ? $dept->spr_order : null;
+                        
+                        // Сортируем сотрудников внутри отдела по spr_order (по возрастанию)
+                        $deptWorkers = $deptWorkers->sortBy(function($worker) {
+                            return (int)$worker->spr_order;
                         });
                     @endphp
-
-                    @foreach($groupedWorkers as $deptId => $deptWorkers)
-                        @php
-                            $dept = $deptWorkers->first()->deptWorkers->first()?->dept;
-                            $deptName = $dept ? $dept->name_full : 'Без отдела';
-                            $deptShort = $dept ? $dept->name_short : 'Без отдела';
-                        @endphp
-                        <div class="section-title-1 mb-4">
-                            {{ $deptName }}
-                            <!--   <span class="dept-count">{{ $deptWorkers->count() }} сотрудников</span>-->
-                        </div>
-                        <div class="dept-table-wrapper">
-
-
-                            <div class="table-responsive">
-                                <table class="worker-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-worker">ФИО, должность</th>
-                                            <th class="col-location">Расположение</th>
-                                            <th class="col-phone">Местный</th>
-                                            <th class="col-phone">Городской</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($deptWorkers as $worker)
-                                            @php
-                                                $deptWorker = $worker->deptWorkers->first();
-                                                $position = $deptWorker?->position;
-
-                                                // Собираем локацию
-                                                $corpusDept = $deptWorker?->corpusDept;
-                                                $corpus = $corpusDept?->corpus;
-                                                $building = $corpus?->building;
-
-                                                $locationParts = [];
-                                                if ($corpus)
-                                                    $locationParts[] = $corpus->name;
-                                                if ($corpusDept && $corpusDept->floor)
-                                                    $locationParts[] = $corpusDept->floor . ' этаж';
-                                                if ($corpusDept && $corpusDept->sector)
-                                                    $locationParts[] = 'сектор ' . $corpusDept->sector;
-                                                $location = implode(' → ', $locationParts);
-
-                                                // Разделяем телефоны на местные и городские
-                                                $localPhones = [];
-                                                $cityPhones = [];
-                                                foreach ($worker->phones as $phone) {
-                                                    if ($phone->is_city_number) {
-                                                        $cityPhones[] = $phone->phone_number;
-                                                    } else {
-                                                        $localPhones[] = $phone->phone_number;
-                                                    }
-                                                }
-                                            @endphp
-                                            <tr>
-                                                <td class="col-worker">
-                                                    <div class="worker-name-cell">
-                                                        <strong>{{ $worker->name_full }}</strong>
-                                                        @if($position)
-                                                            <span class="worker-position">— {{ $position }}</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td class="col-location">
-                                                    @if($location)
-                                                        <span class="location-cell">
-                                                            {{ $location }}
-                                                        </span>
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                                <td class="col-phone">
-                                                    @if(count($localPhones) > 0)
-                                                        @foreach($localPhones as $phone)
-                                                            <a href="tel:{{ $phone }}" class="phone-link local-phone">
-                                                                {{ $phone }}
-                                                            </a>
-                                                        @endforeach
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                                <td class="col-phone">
-                                                    @if(count($cityPhones) > 0)
-                                                        @foreach($cityPhones as $phone)
-                                                            <a href="tel:{{ $phone }}" class="phone-link city-phone">
-                                                                {{ $phone }}
-                                                            </a>
-                                                        @endforeach
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endforeach
-
-                    <!-- Пагинация -->
-                    <div class="pagination-wrapper">
-                        {{ $workers->appends([
-                    'search' => request()->input('search'),
-                    'dept_id' => request()->input('dept_id'),
-                    'corpus_id' => request()->input('corpus_id'),
-                    'floor' => request()->input('floor')
-                ])->links() }}
+                    
+                    <div class="section-title-1 mb-4">
+                        {{ $deptName }}
                     </div>
+                    
+                    <div class="table-wrapper-1">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-worker">ФИО, должность</th>
+                                        <th class="col-location">Расположение</th>
+                                        <th class="col-phone">Местный</th>
+                                        <th class="col-phone">Городской</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($deptWorkers as $worker)
+                                        @php
+                                            $deptWorker = $worker->deptWorkers->first();
+                                            $position = $deptWorker?->position;
+
+                                            // Собираем локацию
+                                            $corpusDept = $deptWorker?->corpusDept;
+                                            $corpus = $corpusDept?->corpus;
+                                            $building = $corpus?->building;
+
+                                            $locationParts = [];
+                                            if ($corpus)
+                                                $locationParts[] = $corpus->name;
+                                            if ($corpusDept && $corpusDept->floor)
+                                                $locationParts[] = $corpusDept->floor . ' этаж';
+                                            if ($corpusDept && $corpusDept->sector)
+                                                $locationParts[] = 'сектор ' . $corpusDept->sector;
+                                            $location = implode(' → ', $locationParts);
+
+                                            // Разделяем телефоны на местные и городские
+                                            $localPhones = [];
+                                            $cityPhones = [];
+                                            foreach ($worker->phones as $phone) {
+                                                if ($phone->is_city_number) {
+                                                    $cityPhones[] = $phone->phone_number;
+                                                } else {
+                                                    $localPhones[] = $phone->phone_number;
+                                                }
+                                            }
+                                        @endphp
+                                        <tr>
+                                            <td class="col-worker">
+                                                <div class="cell-name">
+                                                    <strong>{{ $worker->name_full }}</strong>
+                                                    @if($position)
+                                                        <span class="cell-description">— {{ $position }}</span>
+                                                    @endif
+                                              
+                                                </div>
+                                            </td>
+                                            <td class="col-location">
+                                                @if($location)
+                                                    <span class="cell-location">
+                                                        {{ $location }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="col-phone">
+                                                @if(count($localPhones) > 0)
+                                                    @foreach($localPhones as $phone)
+                                                        <a href="tel:{{ $phone }}" class="phone-link local-phone">
+                                                            {{ $phone }}
+                                                        </a>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="col-phone">
+                                                @if(count($cityPhones) > 0)
+                                                    @foreach($cityPhones as $phone)
+                                                        <a href="tel:{{ $phone }}" class="phone-link city-phone">
+                                                            {{ $phone }}
+                                                        </a>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+
+                <!-- Пагинация -->
+                <div class="pagination-wrapper">
+                    {{ $workers->appends([
+                        'search' => request()->input('search'),
+                        'dept_id' => request()->input('dept_id'),
+                        'corpus_id' => request()->input('corpus_id'),
+                        'floor' => request()->input('floor')
+                    ])->links() }}
+                </div>
             @else
                 <div class="empty-state">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

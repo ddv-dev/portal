@@ -9,6 +9,7 @@ use App\Models\Corpus;
 use App\Models\Building;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PhoneBookController extends Controller
 {
@@ -64,13 +65,16 @@ class PhoneBookController extends Controller
             $buildings = collect();
         }
 
+        // Основной запрос с сортировкой
         $workersQuery = Worker::with([
-            'deptWorkers.dept.type',
-            'deptWorkers.corpusDept.corpus.building',
+            'deptWorkers' => function($query) {
+                $query->with(['dept.type', 'corpusDept.corpus.building']);
+            },
             'phones'
         ])
             ->where('is_active', true);
 
+        // Применяем фильтры
         if ($search) {
             $workersQuery->where(function ($query) use ($search) {
                 $query->where('name_full', 'ilike', "%{$search}%")
@@ -103,9 +107,35 @@ class PhoneBookController extends Controller
             });
         }
 
+        // Получаем имя таблицы для модели Dept
+        $deptTable = (new Dept())->getTable();
+        
+        // Получаем имя таблицы для связи dept_workers
+        // Проверяем, какая таблица используется для связи
+        $deptWorkerTable = 'dept_workers'; // стандартное имя, но может отличаться
+        
+        try {
+            // Пытаемся определить правильное имя таблицы
+            $deptWorkerModel = $workersQuery->getModel()->deptWorkers()->getRelated();
+            $deptWorkerTable = $deptWorkerModel->getTable();
+        } catch (\Exception $e) {
+            // Если не удалось определить, используем стандартное имя
+            $deptWorkerTable = 'dept_workers';
+        }
+
+        // Получаем workers с сортировкой
         $workers = $workersQuery
-            ->orderBy('spr_order')
-            ->orderBy('name_full')->paginate(50);
+            ->select('workers.*')
+            ->addSelect(DB::raw("(SELECT {$deptTable}.spr_order 
+                                 FROM {$deptWorkerTable} 
+                                 INNER JOIN {$deptTable} ON {$deptWorkerTable}.dept_id = {$deptTable}.id 
+                                 WHERE {$deptWorkerTable}.worker_id = workers.id 
+                                 ORDER BY {$deptTable}.spr_order ASC 
+                                 LIMIT 1) as dept_spr_order"))
+            ->orderBy('dept_spr_order')      // Сортировка по spr_order отдела
+            ->orderBy('workers.spr_order')   // Сортировка по spr_order сотрудника
+            ->orderBy('workers.name_full')   // Сортировка по имени
+            ->paginate(50);
 
         $corpuses = Corpus::with('building')->get();
 
@@ -129,6 +159,9 @@ class PhoneBookController extends Controller
             return response()->json([]);
         }
 
+        $deptTable = (new Dept())->getTable();
+        $deptWorkerTable = 'dept_workers';
+
         $workers = Worker::with([
             'deptWorkers.dept',
             'deptWorkers.corpusDept.corpus.building',
@@ -146,7 +179,16 @@ class PhoneBookController extends Controller
                             ->orWhere('name_short', 'ilike', "%{$query}%");
                     });
             })
-            ->limit(20)
+            ->select('workers.*')
+            ->addSelect(DB::raw("(SELECT {$deptTable}.spr_order 
+                                 FROM {$deptWorkerTable} 
+                                 INNER JOIN {$deptTable} ON {$deptWorkerTable}.dept_id = {$deptTable}.id 
+                                 WHERE {$deptWorkerTable}.worker_id = workers.id 
+                                 ORDER BY {$deptTable}.spr_order ASC 
+                                 LIMIT 1) as dept_spr_order"))
+            ->orderBy('dept_spr_order')
+            ->orderBy('workers.spr_order')
+            ->limit(50)
             ->get()
             ->map(function ($worker) {
                 return [

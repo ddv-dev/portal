@@ -27,7 +27,7 @@ class Attachment extends Model
         return $this->morphedByMany(Sop::class, 'linkable', 'attachment_links');
     }
 
-    public function order()
+    public function orders()
     {
         return $this->morphedByMany(OrderStorage::class, 'linkable', 'attachment_links');
     }

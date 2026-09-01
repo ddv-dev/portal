@@ -65,7 +65,7 @@ class WorkerResource extends Resource
                                 ->numeric()
                                 ->default(0)
                                 ->minValue(0)
-                                ->helperText('Чем меньше число, тем выше позиция в списке. 0 - в конце списка.'),
+                                ->helperText('Чем меньше число, тем выше позиция в списке.'),
 
                             Forms\Components\Placeholder::make('spr_order_hint')
                                 ->label(' ')

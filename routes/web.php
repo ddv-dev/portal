@@ -2,11 +2,11 @@
 // routes/web.php
 
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PhoneBookController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Attachment;
 use App\Models\News;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -35,7 +35,10 @@ Route::get('/news/{news}/download/{attachment}', function (News $news, Attachmen
 Route::view('/info', 'info')->name('info');
 Route::view('/sop', 'sop')->name('sop');
 Route::view('/birthdays', 'birthdays')->name('birthdays');
-Route::view('/orders', 'orders')->name('orders');
+
+Route::get('/orders', [OrderController::class, 'index'])->name('orders');
+
+
 Route::view('/appeals', 'appeals')->name('appeals');
 
 // Телефонный справочник

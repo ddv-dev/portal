@@ -1,0 +1,132 @@
+/* ============================================
+   СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ ПРИКАЗОВ
+============================================ */
+
+/* Статусные бейджи */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Счетчик вложений */
+.attachment-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #0369a1;
+    font-size: 13px;
+}
+
+/* Специфичные колонки для приказов */
+.col-order-number {
+    width: 15%;
+    min-width: 120px;
+}
+
+.col-order-title {
+    width: 40%;
+    min-width: 300px;
+}
+
+.col-order-date {
+    width: 15%;
+    min-width: 120px;
+}
+
+.col-order-status {
+    width: 15%;
+    min-width: 130px;
+}
+
+.col-order-attachments {
+    width: 15%;
+    min-width: 100px;
+}
+
+/* Адаптивность для приказов */
+@media (max-width: 992px) {
+    .col-order-number {
+        min-width: 100px;
+    }
+
+    .col-order-title {
+        min-width: 200px;
+    }
+
+    .col-order-date {
+        min-width: 100px;
+    }
+
+    .col-order-status {
+        min-width: 110px;
+    }
+
+    .col-order-attachments {
+        min-width: 90px;
+    }
+}
+
+@media (max-width: 768px) {
+    .col-order-number {
+        min-width: 80px;
+    }
+
+    .col-order-title {
+        min-width: 150px;
+    }
+
+    .col-order-date {
+        min-width: 80px;
+    }
+
+    .col-order-status {
+        min-width: 90px;
+    }
+
+    .col-order-attachments {
+        min-width: 70px;
+    }
+
+    .status-badge {
+        font-size: 12px;
+        padding: 3px 8px;
+    }
+
+    .attachment-count {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-order-number,
+    .col-order-date,
+    .col-order-attachments {
+        min-width: 70px;
+    }
+
+    .col-order-title {
+        min-width: 120px;
+    }
+
+    .col-order-status {
+        min-width: 80px;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+}
