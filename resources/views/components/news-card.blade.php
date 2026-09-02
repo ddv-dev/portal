@@ -5,7 +5,6 @@
     'showReadMore' => true,
     'showMeta' => true,
     'cardClass' => 'news-card',
-    'imageClass' => '',
 ])
 
 @php

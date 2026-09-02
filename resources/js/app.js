@@ -2,11 +2,16 @@
 
 // Импортируем функцию из directory.js
 import { initPhoneBook } from './directory.js';
+import { initHomePage } from './home.js';
 
 console.log('App.js loaded');
 
 // Инициализируем при загрузке DOM
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing PhoneBook...');
     initPhoneBook();
+    initHomePage();
 });
+
+// Экспортируем для возможного использования в других местах
+export { initPhoneBook };
+export { initHomePage };

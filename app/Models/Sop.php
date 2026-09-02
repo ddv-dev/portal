@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Sop extends Model
 {
@@ -24,10 +24,14 @@ class Sop extends Model
     public $timestamps = false;
     
     /**
-     * Вложения
+     * Вложения (полиморфная связь через attachment_links)
      */
-    public function attachments(): HasMany
+    public function attachments(): MorphToMany
     {
-        return $this->hasMany(Attachment::class, 'sop_id');
+        return $this->morphToMany(
+            Attachment::class, 
+            'linkable', 
+            'attachment_links'
+        );
     }
 }

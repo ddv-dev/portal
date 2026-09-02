@@ -11,11 +11,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
+use Illuminate\Support\Collection;
 
 class AttachmentResource extends Resource
 {
     protected static ?string $model = Attachment::class;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-paper-clip';
     protected static ?string $navigationGroup = 'Документация';
     protected static ?string $modelLabel = 'Вложение';
@@ -45,29 +46,77 @@ class AttachmentResource extends Resource
                                 ->label('Путь к файлу')
                                 ->maxLength(1000)
                                 ->placeholder('/uploads/files/document.pdf'),
-                            
-                            Forms\Components\Select::make('sop_id')
-                                ->label('SOP')
-                                ->relationship('sop', 'title')
-                                ->preload()
-                                ->searchable()
-                                ->placeholder('Выберите SOP'),
-                            
-                            Forms\Components\Select::make('order_id')
-                                ->label('Приказ')
-                                ->relationship('order', 'title')
-                                ->preload()
-                                ->searchable()
-                                ->placeholder('Выберите приказ'),
-                            
-                            Forms\Components\Select::make('new_id')
-                                ->label('Новость')
-                                ->relationship('news', 'title')
-                                ->preload()
-                                ->searchable()
-                                ->placeholder('Выберите новость'),
                         ]),
                     ]),
+                
+                // Секция для связей с несколькими сущностями
+                Section::make('Привязка к документам')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Forms\Components\Select::make('sop_ids')
+                                ->label('SOP')
+                                ->multiple()
+                                ->options(\App\Models\Sop::pluck('title', 'id')->toArray())
+                                ->searchable()
+                                ->preload()
+                                ->placeholder('Выберите SOP')
+                                ->afterStateHydrated(function ($component, $record) {
+                                    if ($record) {
+                                        $component->state(
+                                            $record->sop()->pluck('sops.id')->toArray()
+                                        );
+                                    }
+                                })
+                                ->saveRelationshipsUsing(function ($record, $state) {
+                                    if ($record) {
+                                        // Синхронизируем связи через полиморфную таблицу
+                                        $record->sop()->sync($state ?? []);
+                                    }
+                                }),
+                            
+                            Forms\Components\Select::make('order_ids')
+                                ->label('Приказы')
+                                ->multiple()
+                                ->options(\App\Models\OrderStorage::pluck('title', 'id')->toArray())
+                                ->searchable()
+                                ->preload()
+                                ->placeholder('Выберите приказы')
+                                ->afterStateHydrated(function ($component, $record) {
+                                    if ($record) {
+                                        $component->state(
+                                            $record->orders()->pluck('order_storages.id')->toArray()
+                                        );
+                                    }
+                                })
+                                ->saveRelationshipsUsing(function ($record, $state) {
+                                    if ($record) {
+                                        $record->orders()->sync($state ?? []);
+                                    }
+                                }),
+                            
+                            Forms\Components\Select::make('news_ids')
+                                ->label('Новости')
+                                ->multiple()
+                                ->options(\App\Models\News::pluck('title', 'id')->toArray())
+                                ->searchable()
+                                ->preload()
+                                ->placeholder('Выберите новости')
+                                ->afterStateHydrated(function ($component, $record) {
+                                    if ($record) {
+                                        $component->state(
+                                            $record->news()->pluck('news.id')->toArray()
+                                        );
+                                    }
+                                })
+                                ->saveRelationshipsUsing(function ($record, $state) {
+                                    if ($record) {
+                                        $record->news()->sync($state ?? []);
+                                    }
+                                }),
+                        ]),
+                    ])
+                    ->collapsible()
+                    ->collapsed(fn ($record) => $record === null),
             ]);
     }
 
@@ -101,26 +150,48 @@ class AttachmentResource extends Resource
                     ->copyable()
                     ->copyMessage('Путь скопирован'),
                 
-                Tables\Columns\TextColumn::make('sop.title')
+                Tables\Columns\TextColumn::make('sop_list')
                     ->label('SOP')
-                    ->limit(30)
+                    ->getStateUsing(function ($record) {
+                        return $record->sop()->pluck('title')->implode(', ');
+                    })
                     ->toggleable()
                     ->badge()
-                    ->color('success'),
+                    ->color('success')
+                    ->limit(30)
+                    ->html()
+                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
                 
-                Tables\Columns\TextColumn::make('order.title')
-                    ->label('Приказ')
-                    ->limit(30)
+                Tables\Columns\TextColumn::make('order_list')
+                    ->label('Приказы')
+                    ->getStateUsing(function ($record) {
+                        return $record->orders()->pluck('title')->implode(', ');
+                    })
                     ->toggleable()
                     ->badge()
-                    ->color('warning'),
+                    ->color('warning')
+                    ->limit(30)
+                    ->html()
+                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
                 
-                Tables\Columns\TextColumn::make('news.title')
-                    ->label('Новость')
-                    ->limit(30)
+                Tables\Columns\TextColumn::make('news_list')
+                    ->label('Новости')
+                    ->getStateUsing(function ($record) {
+                        return $record->news()->pluck('title')->implode(', ');
+                    })
                     ->toggleable()
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->limit(30)
+                    ->html()
+                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
+                
+                Tables\Columns\TextColumn::make('links_count')
+                    ->label('Кол-во связей')
+                    ->counts('links')
+                    ->toggleable()
+                    ->badge()
+                    ->color('gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
@@ -134,21 +205,24 @@ class AttachmentResource extends Resource
                         'archive' => 'Архив',
                     ]),
                 
-                Tables\Filters\SelectFilter::make('sop_id')
+                Tables\Filters\SelectFilter::make('sop')
                     ->label('SOP')
                     ->relationship('sop', 'title')
+                    ->multiple()
                     ->preload()
                     ->searchable(),
                 
-                Tables\Filters\SelectFilter::make('order_id')
-                    ->label('Приказ')
-                    ->relationship('order', 'title')
+                Tables\Filters\SelectFilter::make('orders')
+                    ->label('Приказы')
+                    ->relationship('orders', 'title')
+                    ->multiple()
                     ->preload()
                     ->searchable(),
                 
-                Tables\Filters\SelectFilter::make('new_id')
-                    ->label('Новость')
+                Tables\Filters\SelectFilter::make('news')
+                    ->label('Новости')
                     ->relationship('news', 'title')
+                    ->multiple()
                     ->preload()
                     ->searchable(),
             ])
@@ -158,17 +232,30 @@ class AttachmentResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->label('Редактировать'),
                 Tables\Actions\DeleteAction::make()
-                    ->label('Удалить'),
+                    ->label('Удалить')
+                    ->before(function ($record) {
+                        // Проверяем, не используется ли вложение
+                        if ($record->isUsed()) {
+                            throw new \Exception('Нельзя удалить вложение, которое используется');
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Удалить выбранные'),
+                        ->label('Удалить выбранные')
+                        ->before(function ($records) {
+                            foreach ($records as $record) {
+                                if ($record->isUsed()) {
+                                    throw new \Exception('Некоторые вложения используются и не могут быть удалены');
+                                }
+                            }
+                        }),
                 ]),
             ])
             ->searchable()
             ->searchPlaceholder('Поиск вложений...')
-            ->defaultSort('id', 'desc'); // ← Сортируем по id, а не по created_at
+            ->defaultSort('id', 'desc');
     }
 
     public static function getRelations(): array

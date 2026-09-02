@@ -112,7 +112,7 @@ class WorkerResource extends Resource
                                                     $floor = $item->floor !== null ? "эт. {$item->floor}" : '';
                                                     $sector = $item->sector ? "сек. {$item->sector}" : '';
                                                     $location = implode(' | ', array_filter([$corpusName, $floor, $sector]));
-                                                    return [$item->id => "{$corpusName} | {$location}"];
+                                                    return [$item->id => "{$location}"];
                                                 })
                                                 ->toArray();
                                         })

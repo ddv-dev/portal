@@ -31,6 +31,9 @@ Route::get('/news/{news}/download/{attachment}', function (News $news, Attachmen
     return response()->download($filePath, $attachment->name);
 })->name('news.download');
 
+Route::get('/search', [NewsController::class, 'search'])->name('home.search');
+
+
 // Статические страницы
 Route::view('/info', 'info')->name('info');
 Route::view('/sop', 'sop')->name('sop');
