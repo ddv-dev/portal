@@ -36,87 +36,18 @@ class AttachmentResource extends Resource
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Введите название файла...'),
-                            
+
                             Forms\Components\TextInput::make('type')
                                 ->label('Тип')
                                 ->maxLength(1000)
                                 ->placeholder('image, document, pdf...'),
-                            
+
                             Forms\Components\TextInput::make('path')
                                 ->label('Путь к файлу')
                                 ->maxLength(1000)
                                 ->placeholder('/uploads/files/document.pdf'),
                         ]),
                     ]),
-                
-                // Секция для связей с несколькими сущностями
-                Section::make('Привязка к документам')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            Forms\Components\Select::make('sop_ids')
-                                ->label('SOP')
-                                ->multiple()
-                                ->options(\App\Models\Sop::pluck('title', 'id')->toArray())
-                                ->searchable()
-                                ->preload()
-                                ->placeholder('Выберите SOP')
-                                ->afterStateHydrated(function ($component, $record) {
-                                    if ($record) {
-                                        $component->state(
-                                            $record->sop()->pluck('sops.id')->toArray()
-                                        );
-                                    }
-                                })
-                                ->saveRelationshipsUsing(function ($record, $state) {
-                                    if ($record) {
-                                        // Синхронизируем связи через полиморфную таблицу
-                                        $record->sop()->sync($state ?? []);
-                                    }
-                                }),
-                            
-                            Forms\Components\Select::make('order_ids')
-                                ->label('Приказы')
-                                ->multiple()
-                                ->options(\App\Models\OrderStorage::pluck('title', 'id')->toArray())
-                                ->searchable()
-                                ->preload()
-                                ->placeholder('Выберите приказы')
-                                ->afterStateHydrated(function ($component, $record) {
-                                    if ($record) {
-                                        $component->state(
-                                            $record->orders()->pluck('order_storages.id')->toArray()
-                                        );
-                                    }
-                                })
-                                ->saveRelationshipsUsing(function ($record, $state) {
-                                    if ($record) {
-                                        $record->orders()->sync($state ?? []);
-                                    }
-                                }),
-                            
-                            Forms\Components\Select::make('news_ids')
-                                ->label('Новости')
-                                ->multiple()
-                                ->options(\App\Models\News::pluck('title', 'id')->toArray())
-                                ->searchable()
-                                ->preload()
-                                ->placeholder('Выберите новости')
-                                ->afterStateHydrated(function ($component, $record) {
-                                    if ($record) {
-                                        $component->state(
-                                            $record->news()->pluck('news.id')->toArray()
-                                        );
-                                    }
-                                })
-                                ->saveRelationshipsUsing(function ($record, $state) {
-                                    if ($record) {
-                                        $record->news()->sync($state ?? []);
-                                    }
-                                }),
-                        ]),
-                    ])
-                    ->collapsible()
-                    ->collapsed(fn ($record) => $record === null),
             ]);
     }
 
@@ -128,7 +59,7 @@ class AttachmentResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Название')
                     ->searchable()
@@ -136,20 +67,20 @@ class AttachmentResource extends Resource
                     ->weight('bold')
                     ->copyable()
                     ->copyMessage('Название скопировано'),
-                
+
                 Tables\Columns\TextColumn::make('type')
                     ->label('Тип')
                     ->badge()
                     ->color('info')
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('path')
                     ->label('Путь')
                     ->limit(50)
                     ->toggleable()
                     ->copyable()
                     ->copyMessage('Путь скопирован'),
-                
+
                 Tables\Columns\TextColumn::make('sop_list')
                     ->label('SOP')
                     ->getStateUsing(function ($record) {
@@ -160,8 +91,8 @@ class AttachmentResource extends Resource
                     ->color('success')
                     ->limit(30)
                     ->html()
-                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
-                
+                    ->formatStateUsing(fn($state) => str_replace(', ', '<br>', $state)),
+
                 Tables\Columns\TextColumn::make('order_list')
                     ->label('Приказы')
                     ->getStateUsing(function ($record) {
@@ -172,8 +103,8 @@ class AttachmentResource extends Resource
                     ->color('warning')
                     ->limit(30)
                     ->html()
-                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
-                
+                    ->formatStateUsing(fn($state) => str_replace(', ', '<br>', $state)),
+
                 Tables\Columns\TextColumn::make('news_list')
                     ->label('Новости')
                     ->getStateUsing(function ($record) {
@@ -184,8 +115,8 @@ class AttachmentResource extends Resource
                     ->color('info')
                     ->limit(30)
                     ->html()
-                    ->formatStateUsing(fn ($state) => str_replace(', ', '<br>', $state)),
-                
+                    ->formatStateUsing(fn($state) => str_replace(', ', '<br>', $state)),
+
                 Tables\Columns\TextColumn::make('links_count')
                     ->label('Кол-во связей')
                     ->counts('links')
@@ -204,21 +135,21 @@ class AttachmentResource extends Resource
                         'audio' => 'Аудио',
                         'archive' => 'Архив',
                     ]),
-                
+
                 Tables\Filters\SelectFilter::make('sop')
                     ->label('SOP')
                     ->relationship('sop', 'title')
                     ->multiple()
                     ->preload()
                     ->searchable(),
-                
+
                 Tables\Filters\SelectFilter::make('orders')
                     ->label('Приказы')
                     ->relationship('orders', 'title')
                     ->multiple()
                     ->preload()
                     ->searchable(),
-                
+
                 Tables\Filters\SelectFilter::make('news')
                     ->label('Новости')
                     ->relationship('news', 'title')
