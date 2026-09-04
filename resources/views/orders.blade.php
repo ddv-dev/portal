@@ -194,14 +194,22 @@
                                                 <span class="status-badge status-inactive">Недействующий</span>
                                             @endif
                                         </td>
-                                        <td class="col-order-attachments">
+                                        <td class="col-info-attachments">
                                             @if($order->attachments->count() > 0)
-                                                <span class="attachment-count">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                                                    </svg>
-                                                    {{ $order->attachments->count() }}
-                                                </span>
+                                                <div class="attachment-list">
+                                                    @foreach($order->attachments as $attachment)
+                                                        <a href="{{ route('download.attachment', ['model' => 'order', 'id' => $order->id, 'attachment' => $attachment->id]) }}"
+                                                            class="attachment-link" title="{{ $attachment->name }}">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2">
+                                                                <path
+                                                                    d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                                                            </svg>
+                                                            {{ Str::limit($attachment->name, 20) }}
+                                                        </a>
+                                                        @if(!$loop->last)<br>@endif
+                                                    @endforeach
+                                                </div>
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif

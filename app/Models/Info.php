@@ -16,7 +16,6 @@ class Info extends Model
         'created_at',
         'order',
         'type_id'
-
     ];
 
     protected $casts = [
