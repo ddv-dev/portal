@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\SopController;
 use App\Http\Controllers\PhoneBookController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Attachment;
@@ -36,7 +37,9 @@ Route::get('/search', [NewsController::class, 'search'])->name('home.search');
 
 // Статические страницы
 Route::view('/info', 'info')->name('info');
-Route::view('/sop', 'sop')->name('sop');
+
+Route::get('/sop', [SopController::class, 'index'])->name('sop');
+
 Route::view('/birthdays', 'birthdays')->name('birthdays');
 
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');
