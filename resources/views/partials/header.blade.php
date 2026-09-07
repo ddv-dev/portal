@@ -8,7 +8,7 @@
             <a href="/" class="logo">
                 <img src="{{ asset('images/logo.svg') }}" alt="Корпоративный портал" class="logo__image" width="40"
                     height="40">
-                <span class="logo__text">Корпоративный портал</span>
+                <span class="logo__text">@yield('title', "Корпоративный портал")</span>
             </a>
         </div>
 
@@ -54,7 +54,13 @@
                 <li class="nav__item">
                     <a href="{{ route('appeals') }}"
                         class="nav__link {{ request()->routeIs('appeals') ? 'nav__link--active' : '' }}">
-                        Заявки
+                        Обращения
+                    </a>
+                </li>
+                <li class="nav__item">
+                    <a href="{{ route('new_worker') }}"
+                        class="nav__link {{ request()->routeIs('new_worker') ? 'nav__link--active' : '' }}">
+                        Новому сотруднику
                     </a>
                 </li>
             </ul>

@@ -113,5 +113,10 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
+    'windows' => [
+        'domain' => env('WINDOWS_DOMAIN', 'M01.DZM'),
+        'wbinfo_path' => env('WBINFO_PATH', '/usr/bin/wbinfo'),
+        'timeout' => env('WBINFO_TIMEOUT', 5),
+        'cache_ttl' => env('AUTH_CACHE_TTL', 300),
+    ],
 ];

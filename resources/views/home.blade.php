@@ -3,7 +3,7 @@
     @vite('resources/js/home.js')
 @endpush
 {{-- Заголовок вкладки --}}
-@section('title', 'Главная страница')
+@section('title', 'Новости и объявления')
 
 {{-- Основной контент --}}
 @section('content')
