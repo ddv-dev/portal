@@ -14,7 +14,7 @@
                     <div class="btn-group" role="group" aria-label="Месяцы">
                         @foreach($months as $month)
                             <a href="{{ route('birthdays', ['month' => $month->month_number, 'search' => request('search')]) }}"
-                                class="btn {{ $selectedMonth == $month->month_number ? 'btn-primary' : 'btn-outline-primary' }} {{ $currentMonth == $month->month_number ? 'current-month' : '' }}">
+                                class="btn-month {{ $selectedMonth == $month->month_number ? 'btn-month--active' : '' }} {{ $currentMonth == $month->month_number ? 'btn-month--current' : '' }}">
                                 {{ $month->month_name }}
 
                             </a>
@@ -147,44 +147,6 @@
             flex-wrap: nowrap;
             display: flex;
             gap: 14px;
-        }
-
-        .months-navigation .btn {
-            border-radius: 999px;
-            width: 36px;
-            height: 36px;
-            /* font-size: 14px; */
-            text-decoration: none;
-            transition: all 0.3s;
-            border: 1px solid #007bff;
-            color: #007bff;
-            background-color: transparent;
-            white-space: nowrap;
-            position: relative;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-        }
-
-        .months-navigation .btn:hover {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .months-navigation .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .months-navigation .btn-outline-primary {
-            background-color: transparent;
-            color: #007bff;
-        }
-
-        .months-navigation .current-month {
-            border: 2px solid #28a745;
         }
 
 

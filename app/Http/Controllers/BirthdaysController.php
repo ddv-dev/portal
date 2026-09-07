@@ -16,18 +16,18 @@ class BirthdaysController extends Controller
             $months = Worker::selectRaw("
                 DISTINCT EXTRACT(MONTH FROM birth_date) as month_number,
                 CASE 
-                    WHEN EXTRACT(MONTH FROM birth_date) = 1 THEN 'ЯНВ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 2 THEN 'ФЕВ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 3 THEN 'МАР'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 4 THEN 'АПР'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 5 THEN 'МАЙ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 6 THEN 'ИЮН'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 7 THEN 'ИЮЛ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 8 THEN 'АВГ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 9 THEN 'СЕН'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 10 THEN 'ОКТ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 11 THEN 'НОЯ'
-                    WHEN EXTRACT(MONTH FROM birth_date) = 12 THEN 'ДЕК'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 1 THEN 'Янв'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 2 THEN 'Фев'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 3 THEN 'Мар'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 4 THEN 'Апр'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 5 THEN 'Май'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 6 THEN 'Июн'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 7 THEN 'Июл'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 8 THEN 'Авг'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 9 THEN 'Сен'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 10 THEN 'Окт'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 11 THEN 'Ноя'
+                    WHEN EXTRACT(MONTH FROM birth_date) = 12 THEN 'Дек'
                 END as month_name
             ")
             ->where('is_active', true)

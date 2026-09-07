@@ -13,7 +13,8 @@
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     font-family: var(--font-family);
-    border-radius: var(--border-radius-base);  /* 12px */
+    border-radius: var(--border-radius-base);
+    /* 12px */
     transition: all var(--transition-base);
     cursor: pointer;
     border: none;
@@ -23,13 +24,15 @@
 
 /* --- Основная кнопка (акцентная) --- */
 .button--primary {
-    background-color: var(--color-component);  /* #FA792F */
+    background-color: var(--color-component);
+    /* #FA792F */
     color: var(--color-text-inverse);
     box-shadow: 0 2px 12px rgba(250, 121, 47, 0.25);
 }
 
 .button--primary:hover {
-    background-color: var(--color-component-hover);  /* #e06520 */
+    background-color: var(--color-component-hover);
+    /* #e06520 */
     box-shadow: 0 4px 20px rgba(250, 121, 47, 0.35);
     transform: translateY(-2px);
 }
@@ -40,20 +43,24 @@
 
 /* --- Вторичная кнопка (светлая) --- */
 .button--secondary {
-    background-color: var(--color-primary);  /* #FFFFFF */
+    background-color: var(--color-primary);
+    /* #FFFFFF */
     color: var(--color-text-inverse);
     border: 2px solid var(--color-primary);
-padding: 12px 24px;}
+    padding: 12px 24px;
+}
 
 .button--secondary:hover {
-    background-color: var(--color-primary);  /* #4668AA */
+    background-color: var(--color-primary);
+    /* #4668AA */
     color: var(--color-text-inverse);
 }
 
 /* --- Кнопка-ссылка (текстовая) --- */
 .button--text {
     background: none;
-    color: var(--color-component);  /* #FA792F */
+    color: var(--color-component);
+    /* #FA792F */
     padding: var(--spacing-sm) var(--spacing-md);
     box-shadow: none;
 }
@@ -77,4 +84,45 @@ padding: 12px 24px;}
 .button--full {
     width: 100%;
     justify-content: center;
+}
+
+.btn-month {
+    font-size: 12px;
+    border-radius: 18px;
+    width: 36px;
+    height: 36px;
+    /* font-size: 14px; */
+    text-decoration: none;
+    transition: all 0.3s;
+    /* border: 1px solid var(--color-primary);*/
+    color: var(--color-text-muted);
+    background-color: var(--color-bg);
+    white-space: nowrap;
+    position: relative;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 3px 3px 6px #A3B1C6, -3px -3px 6px #FFFFFF;
+    font-weight: var(--font-weight-medium);
+}
+
+
+.btn-month--current {
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: unset;
+
+}
+
+.btn-month--active {
+    background-color: var(--color-component);
+    color: white;
+    box-shadow: 0px 4px 3.5px rgba(250, 121, 47, 0.31);
+    border:unset;
+
+}
+
+.btn-month--active .btn-month--current{
+
 }
