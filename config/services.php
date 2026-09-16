@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'ldap' => [
+        'host'     => env('LDAP_HOST'),
+        'base_dn'  => env('LDAP_BASE_DN'),
+        'username' => env('LDAP_USERNAME'),
+        'password' => env('LDAP_PASSWORD'),
+    ],
+
 ];
