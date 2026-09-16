@@ -37,7 +37,7 @@ class SsoGuard implements Guard
             fio:        session('windows_fio') ?? session('windows_user'),
             department: session('windows_department'),
             email:      session('windows_email'),
-            title:      session('windows_title'),
+            position:      session('windows_title'),
         );
 
         return $this->user;

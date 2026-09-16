@@ -9,6 +9,6 @@ class SsoUser
         public string $fio,
         public ?string $department = null,
         public ?string $email = null,
-        public ?string $title = null,
+        public ?string $position = null,
     ) {}
 }

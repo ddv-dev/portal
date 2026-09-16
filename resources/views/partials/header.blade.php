@@ -14,6 +14,9 @@
         @auth('sso')
         <p>Пользователь: {{ auth('sso')->user()->fio }}</p>
         <p>Отдел: {{ auth('sso')->user()->department }}</p>
+        <p>почта: {{ auth('sso')->user()->email }}</p>
+        <p>логин: {{ auth('sso')->user()->username }}</p>
+        <p>должность: {{ auth('sso')->user()->position }}</p>
         @endauth
         {{-- ===== НАВИГАЦИЯ (горизонтальное меню) ===== --}}
         <nav class="nav">
