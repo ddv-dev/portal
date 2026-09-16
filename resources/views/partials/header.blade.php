@@ -11,7 +11,10 @@
                 <span class="logo__text">@yield('title', "Корпоративный портал")</span>
             </a>
         </div>
-
+        @auth('sso')
+        <p>Пользователь: {{ auth('sso')->user()->fio }}</p>
+        <p>Отдел: {{ auth('sso')->user()->department }}</p>
+        @endauth
         {{-- ===== НАВИГАЦИЯ (горизонтальное меню) ===== --}}
         <nav class="nav">
             <ul class="nav__list">

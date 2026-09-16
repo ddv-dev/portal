@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Pagination\Paginator;
+use App\Auth\SsoGuard;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Auth::extend('sso', function ($app, $name, array $config) {
+            return new SsoGuard($app['request']);
+        });
         Paginator::defaultView('vendor.pagination.custom');
-
     }
 }
