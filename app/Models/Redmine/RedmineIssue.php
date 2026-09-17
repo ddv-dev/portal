@@ -51,14 +51,14 @@ class RedmineIssue extends RedmineModel
     public function priority()
     {
         return $this->belongsTo(RedmineEnumeration::class, 'priority_id')
-                    ->where('type', 'IssuePriority');
+            ->where('type', 'IssuePriority');
     }
 
     public function journals()
     {
         return $this->hasMany(RedmineJournal::class, 'journalized_id')
-                    ->where('journalized_type', 'Issue')
-                    ->orderBy('created_on');
+            ->where('journalized_type', 'Issue')
+            ->orderBy('created_on');
     }
 
     public function parent()
@@ -77,7 +77,7 @@ class RedmineIssue extends RedmineModel
     {
         return $query->where(function ($q) use ($userId) {
             $q->where('author_id', $userId)
-              ->orWhere('assigned_to_id', $userId);
+                ->orWhere('assigned_to_id', $userId);
         });
     }
 

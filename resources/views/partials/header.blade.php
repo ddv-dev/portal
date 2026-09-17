@@ -78,7 +78,7 @@
                     </a>
                 </li>
                 <li class="nav__item">
-                    <a href="{{ route('appeals') }}"
+                    <a href="{{ route('redmine.appeals') }}"
                         class="nav__link {{ request()->routeIs('appeals') ? 'nav__link--active' : '' }}">
                         Обращения
                     </a>

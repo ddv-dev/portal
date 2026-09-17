@@ -1,7 +1,7 @@
 <?php
-// app/Models/Redmine/RedmineProject.php
 
 namespace App\Models\Redmine;
+use App\Models\Redmine\RedmineEnabledModule;
 
 class RedmineProject extends RedmineModel
 {

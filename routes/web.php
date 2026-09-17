@@ -8,12 +8,16 @@ use App\Http\Controllers\PhoneBookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BirthdaysController;
 use App\Http\Controllers\AttachmentController;
+
 use Illuminate\Support\Facades\Route;
+
 use App\Models\Attachment;
 use App\Models\News;
 use App\Models\Info;
 use App\Models\Sop;
 use App\Models\OrderStorage;
+
+use App\Http\Controllers\Redmine\ProjectController;
 
 // ===== ПУБЛИЧНЫЕ МАРШРУТЫ (без аутентификации) =====
 
@@ -32,7 +36,6 @@ Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory
 Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');
 
 // Статические страницы
-Route::view('/appeals', 'appeals')->name('appeals');
 Route::view('/new_worker', 'new_worker')->name('new_worker');
 
 // Выход - доступен всем
@@ -65,3 +68,9 @@ Route::get('/download/{model}/{id}/{attachment}', function ($model, $id, Attachm
 
     return response()->download($filePath, $attachment->name);
 })->name('download.attachment');
+
+
+
+Route::prefix('redmine')->name('redmine.')->group(function () {
+    Route::get('/appeals', [ProjectController::class, 'index'])->name('appeals');
+});

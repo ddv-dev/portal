@@ -6,11 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 class ActiveDirectoryService
 {
-    /**
-     * Возвращает атрибуты пользователя AD по логину (sAMAccountName).
-     * Возвращает массив ['fio' => ..., 'department' => ..., 'email' => ..., 'title' => ...]
-     * или null, если пользователь не найден.
-     */
+
     public function getUserInfo(string $username): ?array
     {
         $host     = config('services.ldap.host');

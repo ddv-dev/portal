@@ -30,10 +30,7 @@ class RedmineIssueService
             ->get();
     }
 
-    /**
-     * Создать задачу от имени пользователя.
-     * Возвращает созданный Issue или null при ошибке.
-     */
+
     public function createIssue(RedmineUser $author, array $data): ?RedmineIssue
     {
         $required = ['project_id', 'tracker_id', 'subject', 'status_id', 'priority_id'];
@@ -86,9 +83,7 @@ class RedmineIssueService
         }
     }
 
-    /**
-     * Добавить комментарий к задаче.
-     */
+
     public function addComment(int $issueId, RedmineUser $user, string $notes, bool $private = false): ?RedmineJournal
     {
         if (trim($notes) === '') {
@@ -128,10 +123,7 @@ class RedmineIssueService
         }
     }
 
-    /**
-     * Справочники для формы создания задачи:
-     * трекеры, статусы, приоритеты.
-     */
+
     public function getFormDictionaries(): array
     {
         return [

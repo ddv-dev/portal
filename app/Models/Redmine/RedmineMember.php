@@ -1,7 +1,8 @@
 <?php
-// app/Models/Redmine/RedmineMember.php
 
 namespace App\Models\Redmine;
+
+use App\Models\Redmine\RedmineMemberRole;
 
 class RedmineMember extends RedmineModel
 {
@@ -11,8 +12,8 @@ class RedmineMember extends RedmineModel
     const UPDATED_AT = null;
 
     protected $casts = [
-        'created_on'       => 'datetime',
-        'mail_notification'=> 'boolean',
+        'created_on'        => 'datetime',
+        'mail_notification' => 'boolean',
     ];
 
     public function user()

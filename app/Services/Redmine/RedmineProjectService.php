@@ -11,7 +11,7 @@ class RedmineProjectService
 {
     protected int $cacheTtl = 36000;
 
-    public function getAvailabelForUser(RedmineUser $user): Collection
+    public function getAvailableForUser(RedmineUser $user): Collection
     {
 
         return Cache::remember(

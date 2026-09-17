@@ -1,5 +1,4 @@
 <?php
-// app/Services/Redmine/RedmineUserService.php
 
 namespace App\Services\Redmine;
 
@@ -9,17 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class RedmineUserService
 {
-    /**
-     * Время кэша (секунды). 10 часов — как у AD-сервиса.
-     */
     protected int $cacheTtl = 36000;
 
-    /**
-     * Найти Redmine-пользователя по логину.
-     *
-     * ВАЖНО: в кэше храним только int (ID), а не Eloquent-модель —
-     * иначе при unserialize получаем __PHP_Incomplete_Class.
-     */
     public function findByLogin(string $login): ?RedmineUser
     {
         $login    = strtolower(trim($login));
@@ -48,9 +38,6 @@ class RedmineUserService
         return RedmineUser::find($userId);
     }
 
-    /**
-     * ID пользователя по логину (или null).
-     */
     public function findIdByLogin(string $login): ?int
     {
         $login    = strtolower(trim($login));
@@ -69,13 +56,9 @@ class RedmineUserService
         });
     }
 
-    /**
-     * Сбросить кэш по логину.
-     */
     public function forget(string $login): void
     {
         Cache::forget('redmine_user_id_' . strtolower(trim($login)));
-        // На всякий случай — старый ключ
         Cache::forget('redmine_user_' . strtolower(trim($login)));
     }
 }

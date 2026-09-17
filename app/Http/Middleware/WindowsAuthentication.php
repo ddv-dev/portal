@@ -1,5 +1,4 @@
 <?php
-// app/Http/Middleware/WindowsAuthentication.php
 
 namespace App\Http\Middleware;
 
