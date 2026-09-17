@@ -26,6 +26,8 @@ html {
 .header__top {
     padding-bottom: 16px;
     border-bottom: 1px solid #f0f2f5;
+        display: flex;
+    flex-direction: row;
 }
 
 /* ===== ЛОГОТИП ===== */

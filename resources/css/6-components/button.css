@@ -1,9 +1,3 @@
-/* resources/css/6-components/button.css */
-/* ============================================
-   КОМПОНЕНТ: Кнопка
-   Акцентный цвет — #FA792F
-   ============================================ */
-
 .button {
     display: inline-flex;
     align-items: center;
@@ -22,7 +16,6 @@
     line-height: 1;
 }
 
-/* --- Основная кнопка (акцентная) --- */
 .button--primary {
     background-color: var(--color-component);
     /* #FA792F */
@@ -32,7 +25,6 @@
 
 .button--primary:hover {
     background-color: var(--color-component-hover);
-    /* #e06520 */
     box-shadow: 0 4px 20px rgba(250, 121, 47, 0.35);
     transform: translateY(-2px);
 }
@@ -41,10 +33,8 @@
     transform: translateY(0px);
 }
 
-/* --- Вторичная кнопка (светлая) --- */
 .button--secondary {
     background-color: var(--color-primary);
-    /* #FFFFFF */
     color: var(--color-text-inverse);
     border: 2px solid var(--color-primary);
     padding: 12px 24px;
@@ -52,15 +42,12 @@
 
 .button--secondary:hover {
     background-color: var(--color-primary);
-    /* #4668AA */
     color: var(--color-text-inverse);
 }
 
-/* --- Кнопка-ссылка (текстовая) --- */
 .button--text {
     background: none;
     color: var(--color-component);
-    /* #FA792F */
     padding: var(--spacing-sm) var(--spacing-md);
     box-shadow: none;
 }
@@ -70,7 +57,6 @@
     background: rgba(250, 121, 47, 0.06);
 }
 
-/* --- Размеры кнопок --- */
 .button--sm {
     padding: 8px 18px;
     font-size: var(--font-size-xs);
@@ -91,10 +77,8 @@
     border-radius: 18px;
     width: 36px;
     height: 36px;
-    /* font-size: 14px; */
     text-decoration: none;
     transition: all 0.3s;
-    /* border: 1px solid var(--color-primary);*/
     color: var(--color-text-muted);
     background-color: var(--color-bg);
     white-space: nowrap;
@@ -119,10 +103,20 @@
     background-color: var(--color-component);
     color: white;
     box-shadow: 0px 4px 3.5px rgba(250, 121, 47, 0.31);
-    border:unset;
+    border: unset;
 
 }
 
-.btn-month--active .btn-month--current{
+.btn-month--active .btn-month--current {}
+
+
+.button-white {
+    background-color: #FFFFFF;
+    color: var(--color-primary);
+
+}
+
+.button-white:hover {
+    color: var(--color-component);
 
 }
