@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Services\Redmine;
+
+use App\Models\Redmine\RedmineIssue;
+use App\Models\Redmine\RedmineJournal;
+use App\Models\Redmine\RedmineUser;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class RedmineIssueService
+{
+    public function getUserIssues(int $userId, int $perPage = 20): LengthAwarePaginator
+    {
+        return RedmineIssue::forUser($userId)
+            ->with(['project:id,name', 'status:id,name,is_closed', 'tracker:id,name', 'priority:id,name'])
+            ->orderByDesc('updated_on')
+            ->paginate($perPage);
+    }
+
+
+    public function getHistory(int $issueId): Collection
+    {
+        return RedmineJournal::where('journalized_id', $issueId)
+            ->where('journalized_type', 'Issue')
+            ->with(['user:id,login,firstname,lastname', 'details'])
+            ->orderBy('created_on')
+            ->get();
+    }
+
+    /**
+     * Создать задачу от имени пользователя.
+     * Возвращает созданный Issue или null при ошибке.
+     */
+    public function createIssue(RedmineUser $author, array $data): ?RedmineIssue
+    {
+        $required = ['project_id', 'tracker_id', 'subject', 'status_id', 'priority_id'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                Log::warning('Redmine issue create: missing field', ['field' => $field, 'data' => $data]);
+                return null;
+            }
+        }
+
+        try {
+            return DB::connection('mysql')->transaction(function () use ($author, $data) {
+                $now = now();
+
+                $issue = RedmineIssue::create([
+                    'tracker_id'      => $data['tracker_id'],
+                    'project_id'      => $data['project_id'],
+                    'subject'         => $data['subject'],
+                    'description'     => $data['description'] ?? '',
+                    'status_id'       => $data['status_id'],
+                    'priority_id'     => $data['priority_id'],
+                    'author_id'       => $author->id,
+                    'assigned_to_id'  => $data['assigned_to_id'] ?? null,
+                    'category_id'     => $data['category_id'] ?? null,
+                    'fixed_version_id' => $data['fixed_version_id'] ?? null,
+                    'start_date'      => $data['start_date'] ?? null,
+                    'due_date'        => $data['due_date'] ?? null,
+                    'done_ratio'      => $data['done_ratio'] ?? 0,
+                    'estimated_hours' => $data['estimated_hours'] ?? null,
+                    'is_private'      => $data['is_private'] ?? 0,
+                    'lock_version'    => 0,
+                    'created_on'      => $now,
+                    'updated_on'      => $now,
+                ]);
+
+                Log::info('Redmine issue created', [
+                    'id'        => $issue->id,
+                    'author_id' => $author->id,
+                    'project_id' => $data['project_id'],
+                ]);
+
+                return $issue;
+            });
+        } catch (\Throwable $e) {
+            Log::error('Redmine issue create failed', [
+                'error' => $e->getMessage(),
+                'data'  => $data,
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Добавить комментарий к задаче.
+     */
+    public function addComment(int $issueId, RedmineUser $user, string $notes, bool $private = false): ?RedmineJournal
+    {
+        if (trim($notes) === '') {
+            return null;
+        }
+
+        try {
+            return DB::connection('mysql')->transaction(function () use ($issueId, $user, $notes, $private) {
+                $now = now();
+
+                $journal = RedmineJournal::create([
+                    'journalized_id'   => $issueId,
+                    'journalized_type' => 'Issue',
+                    'user_id'          => $user->id,
+                    'notes'            => $notes,
+                    'created_on'       => $now,
+                    'private_notes'    => $private ? 1 : 0,
+                ]);
+
+                // Обновляем updated_on у задачи, чтобы Redmine её «увидел» как изменённую
+                RedmineIssue::where('id', $issueId)->update(['updated_on' => $now]);
+
+                Log::info('Redmine comment added', [
+                    'issue_id'   => $issueId,
+                    'journal_id' => $journal->id,
+                    'user_id'    => $user->id,
+                ]);
+
+                return $journal;
+            });
+        } catch (\Throwable $e) {
+            Log::error('Redmine comment failed', [
+                'issue_id' => $issueId,
+                'error'    => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Справочники для формы создания задачи:
+     * трекеры, статусы, приоритеты.
+     */
+    public function getFormDictionaries(): array
+    {
+        return [
+            'trackers' => \App\Models\Redmine\RedmineTracker::orderBy('position')->get(['id', 'name']),
+            'statuses' => \App\Models\Redmine\RedmineIssueStatus::orderBy('position')->get(['id', 'name', 'is_closed']),
+            'priorities' => \App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+                ->active()
+                ->orderBy('position')
+                ->get(['id', 'name', 'is_default']),
+        ];
+    }
+}
