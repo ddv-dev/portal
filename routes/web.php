@@ -18,30 +18,28 @@ use App\Models\Sop;
 use App\Models\OrderStorage;
 
 use App\Http\Controllers\Redmine\ProjectController;
+use App\Http\Controllers\Redmine\IssueController;
+use App\Http\Controllers\Redmine\CustomFieldController;
 
-// ===== ПУБЛИЧНЫЕ МАРШРУТЫ (без аутентификации) =====
-
-// Главная страница - доступна всем
 Route::get('/', [NewsController::class, 'index'])->name('home');
 
-// Поиск
 Route::get('/search', [NewsController::class, 'search'])->name('home.search');
 
-// Информационные страницы
 Route::get('/info', [InfoController::class, 'index'])->name('info');
+
 Route::get('/sop', [SopController::class, 'index'])->name('sop');
+
 Route::get('/birthdays', [BirthdaysController::class, 'index'])->name('birthdays');
+
 Route::get('/orders', [OrderController::class, 'index'])->name('orders');
+
 Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory');
+
 Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');
 
-// Статические страницы
 Route::view('/new_worker', 'new_worker')->name('new_worker');
 
-// Выход - доступен всем
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Универсальный маршрут для скачивания вложений
 Route::get('/download/{model}/{id}/{attachment}', function ($model, $id, Attachment $attachment) {
     $modelClass = match ($model) {
         'news' => News::class,
@@ -69,8 +67,17 @@ Route::get('/download/{model}/{id}/{attachment}', function ($model, $id, Attachm
     return response()->download($filePath, $attachment->name);
 })->name('download.attachment');
 
-
-
 Route::prefix('redmine')->name('redmine.')->group(function () {
-    Route::get('/appeals', [ProjectController::class, 'index'])->name('appeals');
+    // Список проектов + выбранный проект
+    Route::get('/appeals',              [ProjectController::class, 'index'])->name('appeals');
+    Route::get('/projects/{id}',        [ProjectController::class, 'show'])->name('projects.show');
+
+    // Задачи
+    Route::post('/issues',              [IssueController::class, 'store'])->name('issues.store');
+    Route::get('/issues/{id}',          [IssueController::class, 'show'])->name('issues.show');
+    Route::post('/issues/{id}/comment', [IssueController::class, 'comment'])->name('issues.comment');
+
+    Route::get('/custom-fields', [CustomFieldController::class, 'index'])->name('custom-fields');
+Route::get('/trackers', [CustomFieldController::class, 'trackers'])->name('trackers');
+
 });

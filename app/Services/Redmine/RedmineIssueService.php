@@ -5,9 +5,10 @@ namespace App\Services\Redmine;
 use App\Models\Redmine\RedmineIssue;
 use App\Models\Redmine\RedmineJournal;
 use App\Models\Redmine\RedmineUser;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator
+;use Illuminate\Support\Facades\DB;
+use App\Models\Redmine\RedmineTracker;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RedmineIssueService
@@ -42,7 +43,7 @@ class RedmineIssueService
         }
 
         try {
-            return DB::connection('mysql')->transaction(function () use ($author, $data) {
+            return DB::connection('redmine')->transaction(function () use ($author, $data) {
                 $now = now();
 
                 $issue = RedmineIssue::create([
@@ -64,6 +65,9 @@ class RedmineIssueService
                     'lock_version'    => 0,
                     'created_on'      => $now,
                     'updated_on'      => $now,
+                    'lft' => 1,
+                    'rgt' => 2,
+                    
                 ]);
 
                 Log::info('Redmine issue created', [
@@ -91,7 +95,7 @@ class RedmineIssueService
         }
 
         try {
-            return DB::connection('mysql')->transaction(function () use ($issueId, $user, $notes, $private) {
+            return DB::connection('redmine')->transaction(function () use ($issueId, $user, $notes, $private) {
                 $now = now();
 
                 $journal = RedmineJournal::create([
@@ -134,5 +138,51 @@ class RedmineIssueService
                 ->orderBy('position')
                 ->get(['id', 'name', 'is_default']),
         ];
+    }
+
+        public function getTrackersForProject(int $projectId): Collection
+    {
+        // Трекеры, разрешённые проекту через projects_trackers.
+        // Если для проекта нет ни одной записи — считаем, что доступны все.
+        $hasRestrictions = DB::connection('redmine')
+            ->table('projects_trackers')
+            ->where('project_id', $projectId)
+            ->exists();
+
+        if (!$hasRestrictions) {
+            return RedmineTracker::query()
+                ->orderBy('position')
+                ->get(['id', 'name']);
+        }
+
+        return RedmineTracker::query()
+            ->whereIn('id', function ($q) use ($projectId) {
+                $q->select('tracker_id')
+                    ->from('projects_trackers')
+                    ->where('project_id', $projectId);
+            })
+            ->orderBy('position')
+            ->get(['id', 'name']);
+    }
+    public function getUserIssuesInProject(int $userId, int $projectId, string $filter = 'open')
+    {
+        $query = RedmineIssue::query()
+            ->where('project_id', $projectId)
+            ->where('author_id', $userId)   
+            ->with([
+                'status:id,name,is_closed',
+                'tracker:id,name',
+                'priority:id,name',
+                'assignee:id,login,firstname,lastname',
+            ])
+            ->orderByDesc('updated_on');
+
+        if ($filter === 'open') {
+            $query->whereNull('closed_on');
+        } elseif ($filter === 'closed') {
+            $query->whereNotNull('closed_on');
+        }
+
+        return $query->limit(200)->get();
     }
 }
