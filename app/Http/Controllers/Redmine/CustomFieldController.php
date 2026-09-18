@@ -30,7 +30,7 @@ class CustomFieldController extends Controller
                     'field_format'    => $f->field_format,
                     'is_required'     => (bool) $f->is_required,
                     'default_value'   => $f->default_value,
-                    'possible_values' => $f->possible_values_list,
+                    'possible_values' => $f->possible_values,
                     'regexp'          => $f->regexp,
                     'min_length'      => $f->min_length,
                     'max_length'      => $f->max_length,

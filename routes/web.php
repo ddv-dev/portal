@@ -78,6 +78,5 @@ Route::prefix('redmine')->name('redmine.')->group(function () {
     Route::post('/issues/{id}/comment', [IssueController::class, 'comment'])->name('issues.comment');
 
     Route::get('/custom-fields', [CustomFieldController::class, 'index'])->name('custom-fields');
-Route::get('/trackers', [CustomFieldController::class, 'trackers'])->name('trackers');
-
+    Route::get('/trackers', [CustomFieldController::class, 'trackers'])->name('trackers');
 });

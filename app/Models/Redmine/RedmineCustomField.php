@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Models\Redmine;
 
 class RedmineCustomField extends RedmineModel
 {
     protected $table = 'custom_fields';
+
+    // НЕ добавляй сюда possible_values в $casts — иначе аксессор перебьётся
 
     public function trackers()
     {
@@ -31,17 +34,26 @@ class RedmineCustomField extends RedmineModel
     }
 
     /**
-     * possible_values в Redmine хранится как YAML-подобный текст, строки "- Value".
+     * possible_values в Redmine хранится как YAML-подобный текст "- Value".
+     * Возвращаем массив строк.
      */
-    public function getPossibleValuesListAttribute(): array
+    public function getPossibleValuesAttribute($value): array
     {
-        $raw = $this->possible_values;
-        if (blank($raw)) return [];
+        if (is_array($value)) {
+            return $value;
+        }
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
 
         $out = [];
-        foreach (preg_split('/\r?\n/', trim($raw)) as $line) {
-            if (preg_match('/^-\s*(.*)$/', $line, $m)) {
-                $out[] = trim($m[1], " \"'");
+        foreach (preg_split('/\r\n|\r|\n/', $value) as $line) {
+            $line = trim($line);
+            if ($line === '' || $line === '---') continue;
+            $line = preg_replace('/^-\s*/', '', $line);
+            $line = trim($line, " \t\"'");
+            if ($line !== '') {
+                $out[] = $line;
             }
         }
         return $out;
