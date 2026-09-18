@@ -20,6 +20,7 @@ use App\Models\OrderStorage;
 use App\Http\Controllers\Redmine\ProjectController;
 use App\Http\Controllers\Redmine\IssueController;
 use App\Http\Controllers\Redmine\CustomFieldController;
+use app\Http\Controllers\Redmine\AttachmentController as RedmineAttachmentController;
 
 Route::get('/', [NewsController::class, 'index'])->name('home');
 
@@ -79,4 +80,7 @@ Route::prefix('redmine')->name('redmine.')->group(function () {
 
     Route::get('/custom-fields', [CustomFieldController::class, 'index'])->name('custom-fields');
     Route::get('/trackers', [CustomFieldController::class, 'trackers'])->name('trackers');
+
+    Route::get('/attachments/{id}/download', [RedmineAttachmentController::class, 'download'])
+    ->name('attachments.download');
 });

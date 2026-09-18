@@ -47,7 +47,7 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('redmine.issues.store') }}" class="rm-form">
+            <form method="POST" action="{{ route('redmine.issues.store') }}" class="rm-form" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="project_id" value="{{ $selectedProject->id }}">
 
@@ -68,6 +68,11 @@
                 <label class="rm-form__full">Описание
                     <textarea name="description" rows="6">{{ old('description') }}</textarea>
                 </label>
+
+                <label class="rm-form__full">Вложения
+                    <input type="file" name="attachments[]" multiple>
+                </label>
+
                 <div id="rm-custom-fields" class="rm-form__custom">
                     @include('redmine.partials.custom-fields', ['customFields' => $customFields])
                 </div>
@@ -160,6 +165,7 @@
             container.style.opacity = '.5';
             try {
                 const url = new URL('{{ route('redmine.custom-fields') }}', window.location.origin);
+
                 url.searchParams.set('project_id', projectId);
                 url.searchParams.set('tracker_id', trackerId);
 

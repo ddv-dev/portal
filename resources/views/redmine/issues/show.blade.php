@@ -1,6 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Задача #' . $issue->id)
-
+@php
+$issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type', 'Issue')
+->where('container_id', $issue->id)
+->get();
+@endphp
 @section('content')
 <div class="rm-issue-page">
 
@@ -71,6 +75,8 @@
             @endif
         </table>
     </section>
+
+
     @if($customValues->isNotEmpty())
     <section class="rm-card">
         <h3 class="rm-card__title">Дополнительные поля</h3>
@@ -102,7 +108,21 @@
         <p class="rm-muted">Описание отсутствует.</p>
         @endif
     </section>
-
+    @if($issueAttachments->isNotEmpty())
+    <section class="rm-card">
+        <h3 class="rm-card__title">Вложения</h3>
+        <ul class="rm-attachments">
+            @foreach($issueAttachments as $a)
+            <li>
+                <a href="{{ route('redmine.attachments.download', $a->id) }}" target="_blank">
+                    {{ $a->filename }}
+                </a>
+                <span class="rm-muted">({{ number_format($a->filesize / 1024, 1) }} КБ)</span>
+            </li>
+            @endforeach
+        </ul>
+    </section>
+    @endif
     {{-- ИСТОРИЯ --}}
     <section class="rm-card">
         <h3 class="rm-card__title">История</h3>
@@ -155,6 +175,9 @@
             @csrf
             <label class="rm-form__full">Комментарий
                 <textarea name="notes" rows="4" required>{{ old('notes') }}</textarea>
+            </label>
+            <label class="rm-form__full">Вложения
+                <input type="file" name="attachments[]" multiple>
             </label>
             <label class="rm-checkbox">
                 <input type="checkbox" name="private" value="1" @checked(old('private'))>
