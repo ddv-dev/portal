@@ -5,8 +5,8 @@ namespace App\Services\Redmine;
 use App\Models\Redmine\RedmineIssue;
 use App\Models\Redmine\RedmineJournal;
 use App\Models\Redmine\RedmineUser;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator
-;use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use App\Models\Redmine\RedmineTracker;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +34,7 @@ class RedmineIssueService
 
     public function createIssue(RedmineUser $author, array $data): ?RedmineIssue
     {
-        $required = ['project_id', 'tracker_id', 'subject', 'status_id', 'priority_id'];
+        $required = ['project_id', 'tracker_id', 'subject'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
                 Log::warning('Redmine issue create: missing field', ['field' => $field, 'data' => $data]);
@@ -42,8 +42,33 @@ class RedmineIssueService
             }
         }
 
+        // Статус по умолчанию для трекера
+        $statusId = (int) (\App\Models\Redmine\RedmineTracker::where('id', $data['tracker_id'])
+            ->value('default_status_id') ?? 0);
+
+        if (!$statusId) {
+            // Фолбэк: первый открытый статус
+            $statusId = (int) (\App\Models\Redmine\RedmineIssueStatus::where('is_closed', 0)
+                ->orderBy('position')
+                ->value('id') ?? 1);
+        }
+
+        // Приоритет по умолчанию
+        $priorityId = (int) (\App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+            ->active()
+            ->where('is_default', 1)
+            ->value('id') ?? 0);
+
+        if (!$priorityId) {
+            // Фолбэк: первый активный
+            $priorityId = (int) (\App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+                ->active()
+                ->orderBy('position')
+                ->value('id') ?? 2);
+        }
+
         try {
-            return DB::connection('redmine')->transaction(function () use ($author, $data) {
+            return DB::connection('redmine')->transaction(function () use ($author, $data, $statusId, $priorityId) {
                 $now = now();
 
                 $issue = RedmineIssue::create([
@@ -51,8 +76,8 @@ class RedmineIssueService
                     'project_id'      => $data['project_id'],
                     'subject'         => $data['subject'],
                     'description'     => $data['description'] ?? '',
-                    'status_id'       => $data['status_id'],
-                    'priority_id'     => $data['priority_id'],
+                    'status_id'       => $statusId,
+                    'priority_id'     => $priorityId,
                     'author_id'       => $author->id,
                     'assigned_to_id'  => $data['assigned_to_id'] ?? null,
                     'category_id'     => $data['category_id'] ?? null,
@@ -65,15 +90,17 @@ class RedmineIssueService
                     'lock_version'    => 0,
                     'created_on'      => $now,
                     'updated_on'      => $now,
-                    'lft' => 1,
-                    'rgt' => 2,
-                    
+                    'lft'             => 1,
+                    'rgt'             => 2,
                 ]);
 
                 Log::info('Redmine issue created', [
-                    'id'        => $issue->id,
-                    'author_id' => $author->id,
-                    'project_id' => $data['project_id'],
+                    'id'           => $issue->id,
+                    'author_id'    => $author->id,
+                    'project_id'   => $data['project_id'],
+                    'tracker_id'   => $data['tracker_id'],
+                    'status_id'    => $statusId,
+                    'priority_id'  => $priorityId,
                 ]);
 
                 return $issue;
@@ -140,7 +167,7 @@ class RedmineIssueService
         ];
     }
 
-        public function getTrackersForProject(int $projectId): Collection
+    public function getTrackersForProject(int $projectId): Collection
     {
         // Трекеры, разрешённые проекту через projects_trackers.
         // Если для проекта нет ни одной записи — считаем, что доступны все.
@@ -168,7 +195,7 @@ class RedmineIssueService
     {
         $query = RedmineIssue::query()
             ->where('project_id', $projectId)
-            ->where('author_id', $userId)   
+            ->where('author_id', $userId)
             ->with([
                 'status:id,name,is_closed',
                 'tracker:id,name',

@@ -59,22 +59,6 @@
                             @endforeach
                         </select>
                     </label>
-
-                    <label>Статус
-                        <select name="status_id" required>
-                            @foreach($statuses as $s)
-                            <option value="{{ $s->id }}" @selected(old('status_id')==$s->id)>{{ $s->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <label>Приоритет
-                        <select name="priority_id" required>
-                            @foreach($priorities as $p)
-                            <option value="{{ $p->id }}" @selected(old('priority_id', $p->is_default ? $p->id : null) == $p->id)>{{ $p->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
                 </div>
 
                 <label class="rm-form__full">Тема
@@ -158,82 +142,90 @@
 @endsection
 @push('scripts')
 <script>
-(function () {
-    const form       = document.querySelector('.rm-form');
-    const trackerSel = form?.querySelector('select[name="tracker_id"]');
-    const container  = document.getElementById('rm-custom-fields');
-    const projectId  = form?.querySelector('input[name="project_id"]')?.value;
+    (function() {
+        const form = document.querySelector('.rm-form');
+        const trackerSel = form?.querySelector('select[name="tracker_id"]');
+        const container = document.getElementById('rm-custom-fields');
+        const projectId = form?.querySelector('input[name="project_id"]')?.value;
 
-    if (!form || !trackerSel || !container) return;
+        if (!form || !trackerSel || !container) return;
 
-    let lastTracker = trackerSel.value;
+        let lastTracker = trackerSel.value;
 
-    trackerSel.addEventListener('change', async () => {
-        const trackerId = trackerSel.value;
-        if (!trackerId || trackerId === lastTracker) return;
-        lastTracker = trackerId;
+        trackerSel.addEventListener('change', async () => {
+            const trackerId = trackerSel.value;
+            if (!trackerId || trackerId === lastTracker) return;
+            lastTracker = trackerId;
 
-        container.style.opacity = '.5';
-        try {
-            const url = new URL('{{ route('redmine.custom-fields') }}', window.location.origin);
-            url.searchParams.set('project_id', projectId);
-            url.searchParams.set('tracker_id', trackerId);
+            container.style.opacity = '.5';
+            try {
+                const url = new URL('{{ route('redmine.custom-fields') }}', window.location.origin);
+                url.searchParams.set('project_id', projectId);
+                url.searchParams.set('tracker_id', trackerId);
 
-            const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
-            const data = await res.json();
+                const res = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
 
-            container.innerHTML = renderFields(data.fields || []);
-        } catch (e) {
-            console.error('custom fields load failed', e);
-            container.innerHTML = '<p class="rm-muted">Не удалось загрузить поля.</p>';
-        } finally {
-            container.style.opacity = '1';
-        }
-    });
-
-    function esc(s) {
-        return String(s ?? '').replace(/[&<>"']/g, c => ({
-            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-        }[c]));
-    }
-
-    function renderFields(fields) {
-        return fields.map(f => {
-            const name = `custom_fields[${f.id}]`;
-            const req  = f.is_required ? 'required' : '';
-            const label = `<label class="rm-form__full">${esc(f.name)}${f.is_required ? ' <span class="rm-req">*</span>' : ''}`;
-            const val = f.default_value ?? '';
-            let input = '';
-
-            switch (f.field_format) {
-                case 'text':
-                    input = `<textarea name="${name}" rows="4" ${req}>${esc(val)}</textarea>`;
-                    break;
-                case 'int':
-                case 'float':
-                    input = `<input type="number" step="${f.field_format === 'float' ? 'any' : '1'}" name="${name}" value="${esc(val)}" ${req}>`;
-                    break;
-                case 'date':
-                    input = `<input type="date" name="${name}" value="${esc(val)}" ${req}>`;
-                    break;
-                case 'bool':
-                    input = `<select name="${name}" ${req}><option value="">—</option><option value="1">Да</option><option value="0">Нет</option></select>`;
-                    break;
-                case 'list': {
-                    const opts = ['<option value="">—</option>']
-                        .concat((f.possible_values || []).map(v =>
-                            `<option value="${esc(v)}" ${String(val) === String(v) ? 'selected' : ''}>${esc(v)}</option>`))
-                        .join('');
-                    input = `<select name="${name}" ${req}>${opts}</select>`;
-                    break;
-                }
-                default:
-                    input = `<input type="text" name="${name}" value="${esc(val)}" ${req}>`;
+                container.innerHTML = renderFields(data.fields || []);
+            } catch (e) {
+                console.error('custom fields load failed', e);
+                container.innerHTML = '<p class="rm-muted">Не удалось загрузить поля.</p>';
+            } finally {
+                container.style.opacity = '1';
             }
-            return label + input + '</label>';
-        }).join('');
-    }
-})();
+        });
+
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            } [c]));
+        }
+
+        function renderFields(fields) {
+            return fields.map(f => {
+                const name = `custom_fields[${f.id}]`;
+                const req = f.is_required ? 'required' : '';
+                const label = `<label class="rm-form__full">${esc(f.name)}${f.is_required ? ' <span class="rm-req">*</span>' : ''}`;
+                const val = f.default_value ?? '';
+                let input = '';
+
+                switch (f.field_format) {
+                    case 'text':
+                        input = `<textarea name="${name}" rows="4" ${req}>${esc(val)}</textarea>`;
+                        break;
+                    case 'int':
+                    case 'float':
+                        input = `<input type="number" step="${f.field_format === 'float' ? 'any' : '1'}" name="${name}" value="${esc(val)}" ${req}>`;
+                        break;
+                    case 'date':
+                        input = `<input type="date" name="${name}" value="${esc(val)}" ${req}>`;
+                        break;
+                    case 'bool':
+                        input = `<select name="${name}" ${req}><option value="">—</option><option value="1">Да</option><option value="0">Нет</option></select>`;
+                        break;
+                    case 'list': {
+                        const opts = ['<option value="">—</option>']
+                            .concat((f.possible_values || []).map(v =>
+                                `<option value="${esc(v)}" ${String(val) === String(v) ? 'selected' : ''}>${esc(v)}</option>`))
+                            .join('');
+                        input = `<select name="${name}" ${req}>${opts}</select>`;
+                        break;
+                    }
+                    default:
+                        input = `<input type="text" name="${name}" value="${esc(val)}" ${req}>`;
+                }
+                return label + input + '</label>';
+            }).join('');
+        }
+    })();
 </script>
 @endpush
 @push('styles')

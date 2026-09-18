@@ -47,16 +47,12 @@ class ProjectController extends Controller
 
         // Значения по умолчанию — чтобы переменные были во вьюхе всегда
         $trackers     = collect();
-        $statuses     = collect();
-        $priorities   = collect();
         $issues       = collect();
         $customFields = collect();
         $filter       = $request->query('filter', 'open'); // open|closed|all
 
         if ($selectedProject) {
             $dict       = $this->issues->getFormDictionaries();
-            $statuses   = $dict['statuses'];
-            $priorities = $dict['priorities'];
             $trackers = $this->issues->getTrackersForProject($selectedProject->id);
 
             // Кастомные поля для пары проект + выбранный (или первый) трекер
@@ -77,8 +73,6 @@ class ProjectController extends Controller
             'projects',
             'selectedProject',
             'trackers',
-            'statuses',
-            'priorities',
             'issues',
             'customFields',
             'filter'
