@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class RedmineProjectService
 {
-    protected int $cacheTtl = 3600; // 1 час
+    protected int $cacheTtl = 36000; 
 
     /**
      * Проекты, доступные пользователю:
@@ -33,7 +33,7 @@ class RedmineProjectService
                     $q->where('projects.is_public', 1)
                         ->orWhereHas('members', fn($m) => $m->where('user_id', $user->id));
                 })
-                ->orderBy('projects.name')
+                ->orderBy('projects.id')
                 ->pluck('projects.id')
                 ->map(fn($id) => (int) $id)
                 ->all();
@@ -53,7 +53,7 @@ class RedmineProjectService
         // Модели достаём свежими из БД и сохраняем порядок
         return RedmineProject::query()
             ->whereIn('projects.id', $projectIds)
-            ->orderBy('projects.name')
+            ->orderBy('projects.id')
             ->get([
                 'projects.id',
                 'projects.name',

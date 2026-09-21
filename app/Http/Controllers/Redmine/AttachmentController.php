@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Redmine;
 use App\Http\Controllers\Controller;
 use App\Models\Redmine\RedmineAttachment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Log;
+
 
 class AttachmentController extends Controller
 {
@@ -17,7 +19,7 @@ class AttachmentController extends Controller
         $path = $base . '/' . ltrim($a->disk_directory, '/') . '/' . $a->disk_filename;
 
         if (!is_file($path)) {
-            \Log::warning('Attachment file not found', [
+            Log::warning('Attachment file not found', [
                 'id'   => $a->id,
                 'path' => $path,
             ]);

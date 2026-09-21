@@ -4,25 +4,33 @@
 @section('content')
 <div class="redmine-appeals">
 
-    {{-- ЛЕВАЯ КОЛОНКА: список проектов --}}
-    <aside class="rm-sidebar">
-        <h2 class="rm-sidebar__title">Проекты</h2>
+    <aside class="sidebar-1">
+        <div class="column-group">
+            <span class="section-title-2">Меню</span>
 
-        @if($projects->isEmpty())
-        <p class="rm-muted">Нет доступных проектов.</p>
-        @else
-        <ul class="rm-projects">
+            @if($projects->isEmpty())
+            <p class="rm-muted">Нет доступных проектов.</p>
+            @else
+                        <ul class="filter-menu">
+
             @foreach($projects as $project)
             <li>
                 <a href="{{ route('redmine.appeals', ['project' => $project->id, 'filter' => $filter]) }}"
-                    class="rm-project {{ $selectedProject && $selectedProject->id === $project->id ? 'is-active' : '' }}">
+                    class="filter-link rm-project {{ $selectedProject && $selectedProject->id === $project->id ? 'is-active' : '' }}">
                     {{ $project->name }}
                 </a>
             </li>
             @endforeach
-        </ul>
-        @endif
+                        </ul>
+
+            @endif
+
+        </div>
+
+
     </aside>
+
+
 
     {{-- ПРАВАЯ КОЛОНКА: форма + история --}}
     <main class="rm-main">
@@ -164,7 +172,7 @@
 
             container.style.opacity = '.5';
             try {
-                const url = new URL('{{ route('redmine.custom-fields') }}', window.location.origin);
+                const url = new URL('{{route('redmine.custom-fields')}}', window.location.origin);
 
                 url.searchParams.set('project_id', projectId);
                 url.searchParams.set('tracker_id', trackerId);
@@ -234,6 +242,7 @@
     })();
 </script>
 @endpush
+
 @push('styles')
 <style>
     .redmine-appeals {
