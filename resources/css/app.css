@@ -36,6 +36,7 @@
 @import '6-components/attachments.css';  
 @import '6-components/phone-book.css';  
 @import '6-components/news-card.css';  
+@import '6-components/redmine.css';  
 
 /* 7. Утилиты */
 @import '7-utilities/helpers.css';

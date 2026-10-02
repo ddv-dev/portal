@@ -10,3 +10,9 @@
     font-weight: var(--font-weight-bold);
     color: #1C212E;
 }
+
+.text-muted{
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+}

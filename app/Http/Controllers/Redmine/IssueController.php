@@ -28,8 +28,6 @@ class IssueController extends Controller
             'tracker_id'     => 'required|integer',
             'subject'        => 'required|string|max:255',
             'description'    => 'nullable|string',
-            'start_date'     => 'nullable|date',
-            'due_date'       => 'nullable|date|after_or_equal:start_date',
             'custom_fields'  => 'nullable|array',
             'custom_fields.*' => 'nullable',
             'attachments.*'   => 'file|max:20480'
