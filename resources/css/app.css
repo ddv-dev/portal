@@ -19,7 +19,6 @@
 @import '1-settings/variables.css';
 
 /* 3. Сброс стилей */
-@import '3-generic/reset.css';
 
 /* 4. Базовые элементы */
 @import '4-elements/typography.css';
@@ -39,5 +38,4 @@
 @import '6-components/redmine.css';  
 
 /* 7. Утилиты */
-@import '7-utilities/helpers.css';
 @import '7-utilities/text.css';
