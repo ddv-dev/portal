@@ -50,7 +50,7 @@ class SsoGuard implements Guard
 
     public function validate(array $credentials = []): bool
     {
-        return false; // SSO не валидирует пароли
+        return false; 
     }
 
     public function hasUser(): bool

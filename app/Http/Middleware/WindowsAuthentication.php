@@ -39,7 +39,6 @@ class WindowsAuthentication
             return response('Unauthorized', 401);
         }
 
-        // Нормализация логина: M01\d.demekhin / d.demekhin@M01.DZM / M01-d.demekhin -> d.demekhin
         $username = str_replace(['M01\\', '@M01.DZM', 'M01-'], '', $username);
         $username = preg_replace('/^.*\\\\/', '', $username);
         $username = preg_replace('/[^a-zA-Z0-9._-]/', '', trim($username));

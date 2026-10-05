@@ -79,12 +79,11 @@ class IssueController extends Controller
 
         $data = $request->validate([
             'notes'         => 'required|string|min:1',
-            'private'       => 'sometimes|boolean',
             'attachments'   => 'nullable|array',
             'attachments.*' => 'file|max:20480',
         ]);
 
-        $journal = $this->issues->addComment($id, $user, $data['notes'], $request->boolean('private'));
+        $journal = $this->issues->addComment($id, $user, $data['notes']);
         if (!$journal) {
             return back()->withErrors(['general' => 'Не удалось добавить комментарий']);
         }

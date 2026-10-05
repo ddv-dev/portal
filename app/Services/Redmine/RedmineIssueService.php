@@ -26,6 +26,12 @@ class RedmineIssueService
     {
         return RedmineJournal::where('journalized_id', $issueId)
             ->where('journalized_type', 'Issue')
+            ->where(function ($q) {
+                $q->where('private_notes', 0)
+                    ->orWhereNull('private_notes');
+            })
+            ->whereNotNull('notes')
+            ->where('notes', '!=', '')
             ->with(['user:id,login,firstname,lastname', 'details'])
             ->orderBy('created_on')
             ->get();
@@ -115,14 +121,14 @@ class RedmineIssueService
     }
 
 
-    public function addComment(int $issueId, RedmineUser $user, string $notes, bool $private = false): ?RedmineJournal
+    public function addComment(int $issueId, RedmineUser $user, string $notes): ?RedmineJournal
     {
         if (trim($notes) === '') {
             return null;
         }
 
         try {
-            return DB::connection('redmine')->transaction(function () use ($issueId, $user, $notes, $private) {
+            return DB::connection('redmine')->transaction(function () use ($issueId, $user, $notes) {
                 $now = now();
 
                 $journal = RedmineJournal::create([
@@ -131,7 +137,7 @@ class RedmineIssueService
                     'user_id'          => $user->id,
                     'notes'            => $notes,
                     'created_on'       => $now,
-                    'private_notes'    => $private ? 1 : 0,
+                    'private_notes'    => 0,
                 ]);
 
                 // Обновляем updated_on у задачи, чтобы Redmine её «увидел» как изменённую

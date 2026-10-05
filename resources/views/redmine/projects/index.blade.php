@@ -6,6 +6,8 @@
 
     <aside class="sidebar-1">
         <div class="column-group">
+
+        {{ now() }}
             <span class="section-title-2">Меню</span>
 
             @if($projects->isEmpty())
@@ -93,7 +95,7 @@
         {{-- ИСТОРИЯ ЗАДАЧ --}}
         <section class="rm-card">
             <div class="rm-card__head">
-                <h3 class="rm-card__title">Мои задачи в этом проекте</h3>
+                <h3 class="rm-card__title">Мои заявки в проекте</h3>
 
                 <nav class="rm-tabs">
                     <a href="{{ route('redmine.appeals', ['project' => $selectedProject->id, 'filter' => 'open']) }}"

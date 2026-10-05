@@ -171,17 +171,13 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
     {{-- ФОРМА КОММЕНТАРИЯ --}}
     <section class="rm-card">
         <h3 class="rm-card__title">Добавить комментарий</h3>
-        <form method="POST" action="{{ route('redmine.issues.comment', $issue->id) }}" class="rm-form">
+        <form method="POST" action="{{ route('redmine.issues.comment', $issue->id) }}" class="rm-form" enctype="multipart/form-data">
             @csrf
             <label class="rm-form__full">Комментарий
                 <textarea name="notes" rows="4" required>{{ old('notes') }}</textarea>
             </label>
             <label class="rm-form__full">Вложения
                 <input type="file" name="attachments[]" multiple>
-            </label>
-            <label class="rm-checkbox">
-                <input type="checkbox" name="private" value="1" @checked(old('private'))>
-                Приватный комментарий
             </label>
             <div class="rm-form__actions">
                 <button type="submit" class="rm-btn rm-btn--primary">Отправить</button>

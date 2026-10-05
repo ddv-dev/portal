@@ -20,7 +20,7 @@ use App\Models\OrderStorage;
 use App\Http\Controllers\Redmine\ProjectController;
 use App\Http\Controllers\Redmine\IssueController;
 use App\Http\Controllers\Redmine\CustomFieldController;
-use app\Http\Controllers\Redmine\AttachmentController as RedmineAttachmentController;
+use App\Http\Controllers\Redmine\AttachmentController as RedmineAttachmentController;
 
 Route::get('/', [NewsController::class, 'index'])->name('home');
 
