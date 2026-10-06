@@ -38,7 +38,6 @@ Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory
 
 Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');
 
-Route::view('/new_worker', 'new_worker')->name('new_worker');
 
 
 Route::get('/download/{model}/{id}/{attachment}', function ($model, $id, Attachment $attachment) {

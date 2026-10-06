@@ -4,16 +4,19 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use App\Models\Worker;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use App\Services\ActiveDirectoryService;
 use App\Services\Redmine\RedmineUserService;
+use App\Services\WorkerProvisioningService;
 
 class WindowsAuthentication
 {
     public function __construct(
         private ActiveDirectoryService $ad,
         private RedmineUserService $redmineUsers,
+        private WorkerProvisioningService $workers,
     ) {}
 
     public function handle(Request $request, Closure $next)
@@ -53,7 +56,10 @@ class WindowsAuthentication
         // 2. Redmine (MySQL) — ищем по логину
         $redmineUser = $this->redmineUsers->findByLogin($username);
 
-        // 3. Кладём в сессию
+        // 3. Worker (PostgreSQL) — ищем по login_ad
+        $worker = $this->workers->findOrCreateByLoginAd($username, $fio);
+
+        // 4. Кладём в сессию
         session([
             'windows_user'         => $username,
             'windows_fio'          => $fio,
@@ -64,6 +70,9 @@ class WindowsAuthentication
             'redmine_user_id'      => $redmineUser?->id,
             'redmine_login'        => $redmineUser?->login,
             'redmine_fio'          => $redmineUser?->full_name,
+
+            'worker_id'            => $worker?->id,
+            'worker_fio'           => $worker?->name_full,
         ]);
 
         $request->attributes->set('windows_user', $username);

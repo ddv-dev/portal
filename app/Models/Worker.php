@@ -76,3 +76,12 @@ class Worker extends Model
             $this->birth_date->day === $today->day;
     }
 }
+
+/*
+
+
+SELECT * FROM public.workers as w
+WHERE w.login_ad is null AND not  (w.birth_date is null)
+ORDER BY w.birth_date ASC LIMIT 1000
+
+*/

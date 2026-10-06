@@ -83,12 +83,7 @@
                         Обращения
                     </a>
                 </li>
-                <li class="nav__item">
-                    <a href="{{ route('new_worker') }}"
-                        class="nav__link {{ request()->routeIs('new_worker') ? 'nav__link--active' : '' }}">
-                        Новому сотруднику
-                    </a>
-                </li>
+            
             </ul>
         </nav>
 

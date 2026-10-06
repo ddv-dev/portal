@@ -1,4 +1,5 @@
 *.log
+run.sh
 .DS_Store
 .env
 .env.backup
