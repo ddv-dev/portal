@@ -8,6 +8,7 @@ use App\Http\Controllers\PhoneBookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BirthdaysController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\ProfileController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,8 @@ Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory
 Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');
 
 
+Route::post('/profile/phone', [ProfileController::class, 'updatePhone'])
+    ->name('profile.phone.update');
 
 Route::get('/download/{model}/{id}/{attachment}', function ($model, $id, Attachment $attachment) {
     $modelClass = match ($model) {

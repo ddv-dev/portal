@@ -21,8 +21,11 @@ class WindowsAuthentication
 
     public function handle(Request $request, Closure $next)
     {
+        $sessionWorkerId = session('worker_id');
+        $sessionWorkerAlive = $sessionWorkerId
+            && Worker::whereKey($sessionWorkerId)->exists();
         // Уже авторизованы в сессии — пропускаем
-        if (session()->has('windows_user')) {
+        if (session()->has('windows_user') && session()->has('worker_id')) {
             return $next($request);
         }
 

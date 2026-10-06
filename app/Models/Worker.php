@@ -40,6 +40,16 @@ class Worker extends Model
         return $this->belongsToMany(Phone::class, 'worker_phones');
     }
 
+    public function cityPhone()
+    {
+        return $this->phones()->where('phone.is_city_number', true);
+    }
+
+    public function mobilePhone()
+    {
+        return $this->phones()->where('phone.is_city_number', false);
+    }
+
     public function birthday()
     {
         if (!$this->birth_date) {

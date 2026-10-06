@@ -1,5 +1,3 @@
-{{-- resources/views/partials/header.blade.php --}}
-
 <header class="header">
     <div class="container">
 
@@ -13,7 +11,7 @@
 
             <div class="user-menu" id="userMenu">
                 <button class="button button-white" id="userIconBtn" aria-label="Профиль">
-                    {{ auth('sso')->user()->fio}}
+                    {{ $profile?->name_full ?? session('windows_fio') ?? 'Гость' }}
                     <span class="user-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2"
@@ -22,22 +20,60 @@
                             <circle cx="12" cy="7" r="4" />
                         </svg>
                     </span>
-
                 </button>
 
-                @auth('sso')
+
                 <div class="user-tooltip" id="userTooltip">
-                    {{ auth('sso')->user()->department .': '.auth('sso')->user()->position}}
+                    {{ $profile['department'] }}{{ $profile['position'] ? ': '.$profile['position'] : '' }}
                     <br>
-                    Почта: {{ auth('sso')->user()->email}}
+                    Почта: {{ $profile['email'] ?: '—' }}
                     <br>
-                    Логин: {{ auth('sso')->user()->username }}
-                    <br>
+                    Логин: {{ $profile['username'] ?: '—' }}
                 </div>
-                @endauth
+
+
 
             </div>
+
+<div class="user-phone-block" id="userPhoneBlock">
+
+    {{-- Городской --}}
+    <form method="POST" action="{{ route('profile.phone.update') }}" class="phone-row">
+        @csrf
+        <span class="phone-label">Городской:</span>
+        <input type="text"
+               name="city"
+               id="cityInput"
+               value="{{ $profile['city_phone'] ?: '' }}"
+               placeholder="например, 4955322333"
+               class="phone-input"
+               readonly>
+        <button type="button" class="phone-edit-btn" data-target="cityInput" aria-label="Редактировать">
+            <svg class="icon-edit" ...>...</svg>
+            <svg class="icon-save" ... style="display:none;">...</svg>
+        </button>
+    </form>
+
+    {{-- Внутренний --}}
+    <form method="POST" action="{{ route('profile.phone.update') }}" class="phone-row">
+        @csrf
+        <span class="phone-label">Внутренний:</span>
+        <input type="text"
+               name="mobile"
+               id="mobileInput"
+               value="{{ $profile['mobile_phone'] ?: '' }}"
+               placeholder="от 4 до 6 цифр"
+               class="phone-input"
+               readonly>
+        <button type="button" class="phone-edit-btn" data-target="mobileInput" aria-label="Редактировать">
+            <svg class="icon-edit" ...>...</svg>
+            <svg class="icon-save" ... style="display:none;">...</svg>
+        </button>
+    </form>
+
+</div>
         </div>
+
         {{-- ===== НАВИГАЦИЯ (горизонтальное меню) ===== --}}
         <nav class="nav">
             <ul class="nav__list">
@@ -83,12 +119,54 @@
                         Обращения
                     </a>
                 </li>
-            
             </ul>
         </nav>
 
     </div>
 </header>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.phone-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const input    = document.getElementById(this.dataset.target);
+            const iconEdit = this.querySelector('.icon-edit');
+            const iconSave = this.querySelector('.icon-save');
+            const form     = input.closest('form');
+
+            // Ещё не редактируем — включаем режим
+            if (input.hasAttribute('readonly')) {
+                input.removeAttribute('readonly');
+                input.focus();
+                iconEdit.style.display = 'none';
+                iconSave.style.display = 'inline';
+                return;
+            }
+
+            // Валидация на клиенте
+            const type  = input.name; // 'city' | 'mobile'
+            const value = input.value.trim();
+
+            if (value !== '') {
+                if (type === 'city' && !/^\d{11}$/.test(value)) {
+                    alert('Городской номер должен содержать ровно 11 цифр (например, 4955322333).');
+                    input.focus();
+                    return;
+                }
+                if (type === 'mobile' && !/^\d{4,6}$/.test(value)) {
+                    alert('Внутренний номер должен содержать от 4 до 6 цифр.');
+                    input.focus();
+                    return;
+                }
+            }
+
+            // Отправляем форму обычным POST — страница перезагрузится
+            form.submit();
+        });
+    });
+});
+</script>
 
 <style>
     .site-header {
@@ -161,5 +239,67 @@
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
+    }
+
+
+
+
+
+    .phone-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .phone-label {
+        font-size: 14px;
+        color: #555;
+        white-space: nowrap;
+    }
+
+    .phone-input {
+        flex: 1;
+        min-width: 0;
+        padding: 4px 8px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: transparent;
+        font-size: 14px;
+        color: #222;
+        transition: border-color 0.2s, background 0.2s;
+    }
+
+    .phone-input[readonly] {
+        cursor: default;
+        border-color: transparent;
+    }
+
+    .phone-input:not([readonly]) {
+        border-color: var(--color-component, #4a90d9);
+        background: #fff;
+        cursor: text;
+    }
+
+    .phone-edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .phone-edit-btn:hover {
+        background: #f0f0f0;
+    }
+
+    .phone-edit-btn svg {
+        display: block;
     }
 </style>
