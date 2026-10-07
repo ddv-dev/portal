@@ -14,6 +14,7 @@ return [
     |
     */
 
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -44,7 +45,8 @@ return [
     'redmine' => [
         'url'      => env('REDMINE_URL', 'http://m01-redmine-01.m01.dzm'),
         'api_key'  => env('REDMINE_API_KEY'),
-            'files_path' => env('REDMINE_FILES_PATH', '/var/www/redmine/files'),
+        'files_path' => env('REDMINE_FILES_PATH', '/var/www/redmine/files'),
+        'email_domain'   => env('REDMINE_EMAIL_DOMAIN', 'M01.DZM'),
 
     ],
 

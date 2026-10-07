@@ -60,7 +60,11 @@ class WindowsAuthentication
 
         $fio = $info['fio'] ?? $username;
 
-        $redmineUser = $this->redmineUsers->findByLogin($username);
+        $redmineUser = $this->redmineUsers->findOrCreateByLoginAd(
+            $username,
+            $fio,
+            $info['email'] ?? null,
+        );
 
         $worker = $this->workers->findOrCreateByLoginAd($username, $fio);
 
