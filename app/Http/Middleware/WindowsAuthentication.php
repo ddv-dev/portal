@@ -21,12 +21,12 @@ class WindowsAuthentication
 
     public function handle(Request $request, Closure $next)
     {
-        $sessionWorkerId = session('worker_id');
-        $sessionWorkerAlive = $sessionWorkerId
-            && Worker::whereKey($sessionWorkerId)->exists();
-        // Уже авторизованы в сессии — пропускаем
         if (session()->has('windows_user') && session()->has('worker_id')) {
-            return $next($request);
+            $workerAlive = Worker::whereKey(session('worker_id'))->exists();
+            if ($workerAlive) {
+                return $next($request);
+            }
+            session()->forget(['windows_user', 'worker_id']);
         }
 
         $username = $_SERVER['REMOTE_USER']
@@ -35,34 +35,34 @@ class WindowsAuthentication
             ?? null;
 
         if (empty($username)) {
-            Log::warning('SSO: REMOTE_USER пуст — Apache не передал пользователя', [
-                'server_keys' => array_filter(
-                    array_keys($_SERVER),
-                    fn($k) => str_contains($k, 'AUTH') || str_contains($k, 'USER') || str_contains($k, 'GSS')
-                ),
-            ]);
-
+            Log::warning('SSO: REMOTE_USER пуст');
             return response('Unauthorized', 401);
         }
 
         $username = str_replace(['M01\\', '@M01.DZM', 'M01-'], '', $username);
         $username = preg_replace('/^.*\\\\/', '', $username);
-        $username = preg_replace('/[^a-zA-Z0-9._-]/', '', trim($username));
+        $username = strtolower(preg_replace('/[^a-zA-Z0-9._-]/', '', trim($username)));
 
-        // 1. AD
-        $info = Cache::remember("ad_info_{$username}", 36000, function () use ($username) {
-            return $this->ad->getUserInfo($username);
-        });
+        $cacheKey = "ad_info_{$username}";
+        $info = Cache::get($cacheKey);
+
+        if (!is_array($info)) {
+            $fresh = $this->ad->getUserInfo($username);
+            if (is_array($fresh) && !empty($fresh)) {
+                Cache::put($cacheKey, $fresh, 3600);
+                $info = $fresh;
+            } else {
+                $info = ['fio' => $username, 'error' => true];
+                Log::warning('SSO: AD не вернул данные', ['user' => $username]);
+            }
+        }
 
         $fio = $info['fio'] ?? $username;
 
-        // 2. Redmine (MySQL) — ищем по логину
         $redmineUser = $this->redmineUsers->findByLogin($username);
 
-        // 3. Worker (PostgreSQL) — ищем по login_ad
         $worker = $this->workers->findOrCreateByLoginAd($username, $fio);
 
-        // 4. Кладём в сессию
         session([
             'windows_user'         => $username,
             'windows_fio'          => $fio,

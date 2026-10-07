@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class WorkerProvisioningService
 {
-    public function findOrCreateByLoginAd(string $loginAd, ?string $fio = null): ?Worker
+    public function findOrCreateByLoginAd(string $loginAd, ?string $fio = null): Worker
     {
         $fio = $fio ?: $loginAd;
 
@@ -74,7 +74,7 @@ class WorkerProvisioningService
         }
     }
 
-    private function create(string $loginAd, string $fio): ?Worker
+    private function create(string $loginAd, string $fio): Worker
     {
         try {
             $worker = Worker::create([
@@ -92,14 +92,20 @@ class WorkerProvisioningService
         } catch (\Throwable $e) {
             $worker = Worker::where('login_ad', $loginAd)->first();
 
-            if (! $worker) {
-                Log::error('Worker creation failed', [
+            if ($worker) {
+                Log::info('Worker create raced — using existing', [
                     'login_ad' => $loginAd,
-                    'error'    => $e->getMessage(),
+                    'worker_id' => $worker->id,
                 ]);
+                return $worker;
             }
 
-            return $worker;
+            Log::error('Worker creation failed', [
+                'login_ad' => $loginAd,
+                'error'    => $e->getMessage(),
+            ]);
+
+            throw $e;
         }
     }
 }
