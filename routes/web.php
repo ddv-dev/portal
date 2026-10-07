@@ -39,7 +39,6 @@ Route::get('/directory', [PhoneBookController::class, 'index'])->name('directory
 
 Route::get('/directory/search', [PhoneBookController::class, 'search'])->name('directory.search');
 
-
 Route::post('/profile/phone', [ProfileController::class, 'updatePhone'])
     ->name('profile.phone.update');
 
@@ -84,5 +83,5 @@ Route::prefix('redmine')->name('redmine.')->group(function () {
     Route::get('/trackers', [CustomFieldController::class, 'trackers'])->name('trackers');
 
     Route::get('/attachments/{id}/download', [RedmineAttachmentController::class, 'download'])
-    ->name('attachments.download');
+        ->name('attachments.download');
 });

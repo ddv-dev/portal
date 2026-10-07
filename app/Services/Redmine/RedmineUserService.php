@@ -23,7 +23,7 @@ class RedmineUserService
                     'login' => $login,
                     'id'    => $user->id,
                 ]);
-                return $user->id; // <-- кэшируем ТОЛЬКО ID (int)
+                return $user->id; 
             }
 
             Log::warning('Redmine user not found', ['login' => $login]);

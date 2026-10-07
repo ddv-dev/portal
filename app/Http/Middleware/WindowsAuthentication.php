@@ -21,6 +21,7 @@ class WindowsAuthentication
 
     public function handle(Request $request, Closure $next)
     {
+
         if (session()->has('windows_user') && session()->has('worker_id')) {
             $workerAlive = Worker::whereKey(session('worker_id'))->exists();
             if ($workerAlive) {
@@ -74,8 +75,8 @@ class WindowsAuthentication
             'redmine_login'        => $redmineUser?->login,
             'redmine_fio'          => $redmineUser?->full_name,
 
-            'worker_id'            => $worker?->id,
-            'worker_fio'           => $worker?->name_full,
+            'worker_id'            => $worker->id,
+            'worker_fio'           => $worker->name_full,
         ]);
 
         $request->attributes->set('windows_user', $username);
