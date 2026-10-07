@@ -19,24 +19,18 @@ class RedmineUserService
         $this->apiKey  = (string) config('services.redmine.api_key');
     }
 
-    /**
-     * Найти пользователя Redmine по логину.
-     * Сначала смотрим в локальной БД (кэш), затем — в API.
-     */
     public function findByLogin(string $login): ?RedmineUser
     {
         $login    = $this->normalizeLogin($login);
         $cacheKey = "redmine_user_id_{$login}";
 
         $userId = Cache::remember($cacheKey, $this->cacheTtl, function () use ($login) {
-            // 1) локальная БД
             $id = RedmineUser::whereRaw('LOWER(login) = ?', [$login])->value('id');
             if ($id !== null) {
                 Log::info('Redmine user found (local)', ['login' => $login, 'id' => $id]);
                 return (int) $id;
             }
 
-            // 2) API Redmine
             $apiId = $this->findIdInRedmine($login);
             if ($apiId !== null) {
                 Log::info('Redmine user found (API)', ['login' => $login, 'id' => $apiId]);
@@ -54,10 +48,6 @@ class RedmineUserService
         return RedmineUser::find($userId);
     }
 
-    /**
-     * Найти id пользователя в Redmine через API.
-     * GET /users.json?name=login
-     */
     public function findIdInRedmine(string $login): ?int
     {
         $login = $this->normalizeLogin($login);
@@ -97,14 +87,6 @@ class RedmineUserService
         }
     }
 
-    /**
-     * Найти или создать пользователя в Redmine из данных AD.
-     *
-     * @param string      $login  логин из AD (d.demekhin)
-     * @param string|null $fio    ФИО ("Фамилия Имя Отчество")
-     * @param string|null $email  email из AD (может быть пусто)
-     * @param string|null $domain домен для синтетического email (DD.COM)
-     */
     public function findOrCreateByLoginAd(
         string $login,
         ?string $fio = null,
@@ -113,13 +95,11 @@ class RedmineUserService
     ): ?RedmineUser {
         $login = $this->normalizeLogin($login);
 
-        // 1) уже есть?
         $existing = $this->findByLogin($login);
         if ($existing !== null) {
             return $existing;
         }
 
-        // 2) создаём в Redmine
         $email = $this->normalizeEmail($email, $login, $domain);
         $name  = $this->splitFio($fio, $login);
 
@@ -134,26 +114,15 @@ class RedmineUserService
             return null;
         }
 
-        // 3) сбрасываем кэш и пробуем перечитать
         $this->forget($login);
 
-        // локальная БД могла ещё не синхронизироваться — пробуем найти
         $user = $this->findByLogin($login);
         if ($user !== null) {
             return $user;
         }
-
-        // 4) если локальной записи нет — создаём заглушку-модель,
-        //    чтобы middleware получил id
         return $this->makeLocalStub($created, $login, $name, $email);
     }
 
-    /**
-     * Создать пользователя в Redmine через API.
-     * POST /users.json
-     *
-     * @return int|null id созданного пользователя
-     */
     public function createInRedmine(
         string $login,
         string $lastname,
@@ -170,8 +139,6 @@ class RedmineUserService
             ],
         ];
 
-        // Если в Redmine настроен LDAP — привязываем к источнику,
-        // чтобы пароль управлялся AD, а не Redmine.
         $authSourceId = config('services.redmine.auth_source_id');
         if ($authSourceId) {
             $payload['user']['auth_source_id'] = (int) $authSourceId;
