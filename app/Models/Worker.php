@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Redmine\RedmineUser;
+use App\Models\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Worker extends Model
 {
@@ -23,7 +27,15 @@ class Worker extends Model
         'spr_order' => 'integer'
 
     ];
+    public function redmineUser(): BelongsTo
+    {
+        return $this->belongsTo(RedmineUser::class, 'redmine_user_id');
+    }
 
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'worker_id');
+    }
     public function deptWorkers()
     {
         return $this->hasMany(DeptWorker::class);

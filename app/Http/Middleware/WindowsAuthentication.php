@@ -68,6 +68,22 @@ class WindowsAuthentication
 
         $worker = $this->workers->findOrCreateByLoginAd($username, $fio);
 
+        if ($redmineUser && !$worker->redmine_user_id) {
+            $worker->redmine_user_id = $redmineUser->id;
+            $worker->save();
+        } elseif ($redmineUser && $worker->redmine_user_id !== $redmineUser->id) {
+            try {
+                $worker->redmine_user_id = $redmineUser->id;
+                $worker->save();
+            } catch (\Illuminate\Database\QueryException $e) {
+                Log::error('SSO: cannot bind redmine_user_id to worker', [
+                    'worker_id'       => $worker->id,
+                    'redmine_user_id' => $redmineUser->id,
+                    'error'           => $e->getMessage(),
+                ]);
+            }
+        }
+
         session([
             'windows_user'         => $username,
             'windows_fio'          => $fio,

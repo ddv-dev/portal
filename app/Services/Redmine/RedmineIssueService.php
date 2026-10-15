@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Redmine\RedmineTracker;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-
+use App\Services\Notifications\IssueNotifier;
 class RedmineIssueService
 {
     public function getUserIssues(int $userId, int $perPage = 20): LengthAwarePaginator
@@ -128,7 +128,7 @@ class RedmineIssueService
         }
 
         try {
-            return DB::connection('redmine')->transaction(function () use ($issueId, $user, $notes) {
+            $journal = DB::connection('redmine')->transaction(function () use ($issueId, $user, $notes) {
                 $now = now();
 
                 $journal = RedmineJournal::create([
@@ -143,14 +143,35 @@ class RedmineIssueService
                 // Обновляем updated_on у задачи, чтобы Redmine её «увидел» как изменённую
                 RedmineIssue::where('id', $issueId)->update(['updated_on' => $now]);
 
-                Log::info('Redmine comment added', [
-                    'issue_id'   => $issueId,
-                    'journal_id' => $journal->id,
-                    'user_id'    => $user->id,
-                ]);
-
                 return $journal;
             });
+
+            if (!$journal) {
+                return null;
+            }
+
+            Log::info('Redmine comment added', [
+                'issue_id'   => $issueId,
+                'journal_id' => $journal->id,
+                'user_id'    => $user->id,
+            ]);
+
+            // ---- Уведомления ------------------------------------------
+            $issue = RedmineIssue::find($issueId);
+            if ($issue) {
+                try {
+                    app(IssueNotifier::class)->onComment($issue, $journal, $user);
+                } catch (\Throwable $e) {
+                    Log::error('IssueNotifier::onComment failed', [
+                        'issue_id'   => $issueId,
+                        'journal_id' => $journal->id,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            }
+            // -----------------------------------------------------------
+
+            return $journal;
         } catch (\Throwable $e) {
             Log::error('Redmine comment failed', [
                 'issue_id' => $issueId,

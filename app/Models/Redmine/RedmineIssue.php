@@ -1,5 +1,4 @@
 <?php
-// app/Models/Redmine/RedmineIssue.php
 
 namespace App\Models\Redmine;
 
@@ -71,7 +70,6 @@ class RedmineIssue extends RedmineModel
         return $this->hasMany(RedmineIssue::class, 'parent_id');
     }
 
-    // ----- Скоупы -----
 
     public function scopeForUser($query, int $userId)
     {
