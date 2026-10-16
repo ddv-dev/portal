@@ -386,6 +386,10 @@ position: absolute;
         display: none;
     }
 
+    .bell-btn__badge.d-none {
+        display: none;
+    }
+
     /* ===== Профиль / тултип ===== */
     .user-menu {
         position: relative;
