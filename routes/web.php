@@ -10,6 +10,8 @@ use App\Http\Controllers\BirthdaysController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ProfileController;
 
+use App\Http\Controllers\Notifications\NotificationController;
+
 use Illuminate\Support\Facades\Route;
 
 use App\Models\Attachment;
@@ -84,4 +86,28 @@ Route::prefix('redmine')->name('redmine.')->group(function () {
 
     Route::get('/attachments/{id}/download', [RedmineAttachmentController::class, 'download'])
         ->name('attachments.download');
+});
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+        ->name('notifications.unreadCount');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])
+        ->name('notifications.markRead');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.markAllRead');
+
+        Route::get('/__debug/session', function () {
+    return response()->json([
+        'worker_id'       => session('worker_id'),
+        'windows_user'    => session('windows_user'),
+        'redmine_user_id' => session('redmine_user_id'),
+        'unreadCount'     => session('worker_id')
+            ? app(\App\Services\Notifications\NotificationService::class)
+                ->unreadCount(session('worker_id'))
+            : null,
+    ]);
 });

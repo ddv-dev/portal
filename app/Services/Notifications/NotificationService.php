@@ -69,17 +69,22 @@ class NotificationService
     }
 
 
-    public function forWorker(int $workerId, int $perPage = 30)
-    {
-        return Notification::forWorker($workerId)
-            ->orderByDesc('created_at')
-            ->paginate($perPage);
-    }
+public function forWorker(int $workerId, int $limit = 20): \Illuminate\Support\Collection
+{
+    return Notification::query()
+        ->where('worker_id', $workerId)
+        ->latest()
+        ->limit($limit)
+        ->get();
+}
 
-    public function unreadCount(int $workerId): int
-    {
-        return Notification::forWorker($workerId)->unread()->count();
-    }
+public function unreadCount(int $workerId): int
+{
+    return Notification::query()
+        ->where('worker_id', $workerId)
+        ->whereNull('read_at')
+        ->count();
+}
 
     public function markAsRead(int $notificationId, int $workerId): bool
     {

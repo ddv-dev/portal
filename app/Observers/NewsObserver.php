@@ -10,17 +10,15 @@ class NewsObserver
 {
     public function created(News $news): void
     {
-        // --- Вложения из сессии (если используешь этот механизм) ---
+        // Привязка загруженных файлов (если используется сессия)
         $uploadedFiles = session('news_attachments') ?? [];
         if (!empty($uploadedFiles)) {
             $news->createAttachmentsFromUploads($uploadedFiles);
             session()->forget('news_attachments');
         }
 
-        // --- Уведомления всем работникам ---
         try {
-            $actorWorkerId = session('worker_id'); // может быть null — это ок
-            app(NewsNotifier::class)->onCreated($news, $actorWorkerId);
+            app(NewsNotifier::class)->onCreated($news, session('worker_id'));
         } catch (\Throwable $e) {
             Log::error('NewsObserver: onCreated failed', [
                 'news_id' => $news->id,
