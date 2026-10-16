@@ -8,6 +8,7 @@ use App\Models\Redmine\RedmineIssueStatus;
 use App\Models\Redmine\RedmineUser;
 use App\Models\Worker;
 use App\Notifications\Types\NotificationType;
+use Illuminate\Support\Facades\Route;
 
 class IssueNotifier
 {
@@ -30,7 +31,7 @@ class IssueNotifier
                 'notifiable_id'   => $issue->id,
                 'title'           => "Новый комментарий к #{$issue->id}",
                 'body'            => mb_substr((string) $journal->notes, 0, 300),
-                'url'             => route('redmine.issues.show', $issue->id),
+                'url'             => $this->issueUrl($issue->id),
                 'payload'         => [
                     'issue_id'   => $issue->id,
                     'journal_id' => $journal->id,
@@ -57,7 +58,7 @@ class IssueNotifier
                 'notifiable_id'   => $issue->id,
                 'title'           => "Статус задачи #{$issue->id} изменён",
                 'body'            => "{$old} → {$new}",
-                'url'             => route('redmine.issues.show', $issue->id),
+                'url'             => $this->issueUrl($issue->id),
                 'payload'         => [
                     'issue_id'      => $issue->id,
                     'old_status_id' => $oldStatusId,
@@ -69,6 +70,23 @@ class IssueNotifier
         );
     }
 
+    /**
+     * Безопасное формирование URL задачи.
+     * Если роут вдруг переименуют или удалят — уведомление не упадёт.
+     */
+    protected function issueUrl(int $issueId): string
+    {
+        if (Route::has('redmine.issues.show')) {
+            return route('redmine.issues.show', $issueId);
+        }
+
+        if (Route::has('redmine.appeals')) {
+            return route('redmine.appeals');
+        }
+
+        return url('/');
+    }
+
     protected function workerIdByRedmine(?int $redmineUserId): ?int
     {
         if (!$redmineUserId) return null;
@@ -77,7 +95,7 @@ class IssueNotifier
         if ($workerId) return (int) $workerId;
 
         // fallback: через login_ad
-        $login = \App\Models\Redmine\RedmineUser::whereKey($redmineUserId)->value('login');
+        $login = RedmineUser::whereKey($redmineUserId)->value('login');
         if (!$login) return null;
 
         return Worker::whereRaw('LOWER(login_ad) = ?', [strtolower($login)])->value('id');

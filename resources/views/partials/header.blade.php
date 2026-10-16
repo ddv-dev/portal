@@ -1,16 +1,16 @@
 <header class="header">
     <div class="container">
 
-        {{-- ===== ВЕРХНЯЯ ЧАСТЬ: Логотип ===== --}}
+        {{-- ===== ВЕРХНЯЯ ЧАСТЬ ===== --}}
         <div class="header__top">
             <a href="/" class="logo">
-                <img src="{{ asset('images/logo.svg') }}" alt="Корпоративный портал" class="logo__image" width="40"
-                    height="40">
+                <img src="{{ asset('images/logo.svg') }}" alt="Корпоративный портал" class="logo__image" width="40" height="40">
                 <span class="logo__text">@yield('title', "Корпоративный портал")</span>
             </a>
 
             <div class="col">
                 <div class="header__actions">
+
                     {{-- ===== Колокольчик ===== --}}
                     <button type="button" class="bell-btn" id="openNotifications" aria-label="Уведомления">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -19,9 +19,10 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
-                        @if (($unreadCount ?? 0) > 0)
-                            <span class="bell-btn__badge">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
-                        @endif
+                        <span id="notif-badge"
+                            class="bell-btn__badge {{ ($unreadCount ?? 0) > 0 ? '' : 'd-none' }}">
+                            {{ $unreadCount ?? 0 }}
+                        </span>
                     </button>
 
                     {{-- ===== Профиль ===== --}}
@@ -48,7 +49,7 @@
                     </div>
                 </div>
 
-                {{-- ===== Кнопка открытия попапа телефонов ===== --}}
+                {{-- ===== Кнопка попапа телефонов ===== --}}
                 <div class="user-phone-block" id="userPhoneBlock">
                     <button type="button" class="btn phone-edit-open" id="openPhoneModal">
                         Изменить мой номер
@@ -60,48 +61,13 @@
         {{-- ===== НАВИГАЦИЯ ===== --}}
         <nav class="nav">
             <ul class="nav__list">
-                <li class="nav__item">
-                    <a href="{{ route('home') }}"
-                        class="nav__link {{ request()->routeIs('home') ? 'nav__link--active' : '' }}">
-                        Новости
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('directory') }}"
-                        class="nav__link {{ request()->routeIs('directory') ? 'nav__link--active' : '' }}">
-                        Телефонный справочник
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('info') }}"
-                        class="nav__link {{ request()->routeIs('info') ? 'nav__link--active' : '' }}">
-                        Информации
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('sop') }}"
-                        class="nav__link {{ request()->routeIs('sop') ? 'nav__link--active' : '' }}">
-                        СОП
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('orders') }}"
-                        class="nav__link {{ request()->routeIs('orders') ? 'nav__link--active' : '' }}">
-                        Приказы
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('birthdays') }}"
-                        class="nav__link {{ request()->routeIs('birthdays') ? 'nav__link--active' : '' }}">
-                        Дни рождения
-                    </a>
-                </li>
-                <li class="nav__item">
-                    <a href="{{ route('redmine.appeals') }}"
-                        class="nav__link {{ request()->routeIs('appeals') ? 'nav__link--active' : '' }}">
-                        Обращения
-                    </a>
-                </li>
+                <li class="nav__item"><a href="{{ route('home') }}" class="nav__link {{ request()->routeIs('home') ? 'nav__link--active' : '' }}">Новости</a></li>
+                <li class="nav__item"><a href="{{ route('directory') }}" class="nav__link {{ request()->routeIs('directory') ? 'nav__link--active' : '' }}">Телефонный справочник</a></li>
+                <li class="nav__item"><a href="{{ route('info') }}" class="nav__link {{ request()->routeIs('info') ? 'nav__link--active' : '' }}">Информации</a></li>
+                <li class="nav__item"><a href="{{ route('sop') }}" class="nav__link {{ request()->routeIs('sop') ? 'nav__link--active' : '' }}">СОП</a></li>
+                <li class="nav__item"><a href="{{ route('orders') }}" class="nav__link {{ request()->routeIs('orders') ? 'nav__link--active' : '' }}">Приказы</a></li>
+                <li class="nav__item"><a href="{{ route('birthdays') }}" class="nav__link {{ request()->routeIs('birthdays') ? 'nav__link--active' : '' }}">Дни рождения</a></li>
+                <li class="nav__item"><a href="{{ route('redmine.appeals') }}" class="nav__link {{ request()->routeIs('appeals') ? 'nav__link--active' : '' }}">Обращения</a></li>
             </ul>
         </nav>
 
@@ -117,31 +83,47 @@
             <h3 class="notif-sidebar__title" id="notifTitle">
                 Уведомления
                 @if (($unreadCount ?? 0) > 0)
-                    <span class="notif-sidebar__count">{{ $unreadCount }}</span>
+                <span class="notif-sidebar__count" id="notifSidebarCount">{{ $unreadCount }}</span>
                 @endif
             </h3>
             <button type="button" class="notif-sidebar__close" data-close-sidebar aria-label="Закрыть">&times;</button>
         </header>
 
-        <div class="notif-sidebar__body">
+        <div class="notif-sidebar__body" id="notifSidebarBody">
             @forelse ($notifications ?? [] as $note)
-                <a href="{{ $note->url ?? '#' }}"
-                   class="notif-item {{ empty($note->read_at) ? 'notif-item--unread' : '' }}">
-                    <div class="notif-item__title">{{ $note->title ?? 'Уведомление' }}</div>
-                    <div class="notif-item__text">{{ $note->message ?? '' }}</div>
-                    <div class="notif-item__date">
-                        {{ \Illuminate\Support\Carbon::parse($note->created_at ?? now())->diffForHumans() }}
-                    </div>
-                </a>
+            @php
+            $isUnread = empty($note->read_at);
+            $typeIcon = match ($note->type) {
+            'issue_comment' => '💬',
+            'issue_status_changed' => '🔄',
+            'news_created' => '📰',
+            default => '🔔',
+            };
+            @endphp
+
+            <a href="{{ $note->url ?: '#' }}"
+                class="notif-item js-notif-link {{ $isUnread ? 'notif-item--unread' : '' }}"
+                data-id="{{ $note->id }}">
+                <div class="notif-item__title">
+                    <span class="notif-item__icon">{{ $typeIcon }}</span>
+                    {{ $note->title }}
+                </div>
+                @if ($note->body)
+                <div class="notif-item__text">{{ $note->body }}</div>
+                @endif
+                <div class="notif-item__date">
+                    {{ \Illuminate\Support\Carbon::parse($note->created_at)->diffForHumans() }}
+                </div>
+            </a>
             @empty
-                <div class="notif-empty">Уведомлений пока нет</div>
+            <div class="notif-empty" id="notifEmpty">Уведомлений пока нет</div>
             @endforelse
         </div>
 
         <footer class="notif-sidebar__foot">
-            <a href="{{ route('notifications.index') ?? '#' }}" class="notif-sidebar__all">
-                Все уведомления
-            </a>
+            <button type="button" class="notif-sidebar__all" id="markAllReadBtn">
+                Прочитать все
+            </button>
         </footer>
     </aside>
 </div>
@@ -158,34 +140,26 @@
             @csrf
 
             @if ($errors->any())
-                <div class="phone-modal__errors">
-                    @foreach ($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
-                </div>
+            <div class="phone-modal__errors">
+                @foreach ($errors->all() as $error)
+                <div>{{ $error }}</div>
+                @endforeach
+            </div>
             @endif
 
             <div class="phone-modal__field">
                 <label for="modalCityInput">Городской номер</label>
-                <input type="text"
-                    name="city"
-                    id="modalCityInput"
+                <input type="text" name="city" id="modalCityInput"
                     value="{{ old('city', $profile['city_phone'] ?: '') }}"
-                    placeholder="например, 4955322333"
-                    inputmode="numeric"
-                    autocomplete="off">
+                    placeholder="например, 4955322333" inputmode="numeric" autocomplete="off">
                 <small class="phone-modal__hint">10 цифр, без пробелов и дефисов. Оставьте пустым, чтобы удалить.</small>
             </div>
 
             <div class="phone-modal__field">
                 <label for="modalMobileInput">Внутренний номер</label>
-                <input type="text"
-                    name="mobile"
-                    id="modalMobileInput"
+                <input type="text" name="mobile" id="modalMobileInput"
                     value="{{ old('mobile', $profile['mobile_phone'] ?: '') }}"
-                    placeholder="от 4 до 6 цифр"
-                    inputmode="numeric"
-                    autocomplete="off">
+                    placeholder="от 4 до 6 цифр" inputmode="numeric" autocomplete="off">
                 <small class="phone-modal__hint">от 4 до 6 цифр. Оставьте пустым, чтобы удалить.</small>
             </div>
 
@@ -198,12 +172,12 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        /* ===== Попап телефонов ===== */
-        const modal   = document.getElementById('phoneModal');
+    document.addEventListener('DOMContentLoaded', function() {
+        /* ================= Попап телефонов ================= */
+        const modal = document.getElementById('phoneModal');
         const openBtn = document.getElementById('openPhoneModal');
-        const form    = document.getElementById('phoneModalForm');
-        const cityInput   = document.getElementById('modalCityInput');
+        const form = document.getElementById('phoneModalForm');
+        const cityInput = document.getElementById('modalCityInput');
         const mobileInput = document.getElementById('modalMobileInput');
 
         function openModal() {
@@ -220,13 +194,10 @@
         }
 
         if (openBtn) openBtn.addEventListener('click', openModal);
+        modal.querySelectorAll('[data-close-modal]').forEach(el => el.addEventListener('click', closeModal));
 
-        modal.querySelectorAll('[data-close-modal]').forEach(el => {
-            el.addEventListener('click', closeModal);
-        });
-
-        form.addEventListener('submit', function (e) {
-            const city   = cityInput.value.trim();
+        form.addEventListener('submit', function(e) {
+            const city = cityInput.value.trim();
             const mobile = mobileInput.value.trim();
 
             if (city !== '' && !/^\d{10}$/.test(city)) {
@@ -235,7 +206,6 @@
                 cityInput.focus();
                 return;
             }
-
             if (mobile !== '' && !/^\d{4,6}$/.test(mobile)) {
                 e.preventDefault();
                 alert('Внутренний номер должен содержать от 4 до 6 цифр.');
@@ -244,13 +214,13 @@
             }
         });
 
-        @if ($errors->any())
-            openModal();
+        @if($errors->any())
+        openModal();
         @endif
 
-        /* ===== Сайдбар уведомлений ===== */
-        const sidebar    = document.getElementById('notifSidebar');
-        const bellBtn    = document.getElementById('openNotifications');
+        /* ================= Сайдбар уведомлений ================= */
+        const sidebar = document.getElementById('notifSidebar');
+        const bellBtn = document.getElementById('openNotifications');
 
         function openSidebar() {
             sidebar.classList.add('notif-sidebar--open');
@@ -265,13 +235,10 @@
         }
 
         if (bellBtn) bellBtn.addEventListener('click', openSidebar);
+        sidebar.querySelectorAll('[data-close-sidebar]').forEach(el => el.addEventListener('click', closeSidebar));
 
-        sidebar.querySelectorAll('[data-close-sidebar]').forEach(el => {
-            el.addEventListener('click', closeSidebar);
-        });
-
-        // Esc закрывает сначала сайдбар, потом попап
-        document.addEventListener('keydown', function (e) {
+        /* ================= Esc ================= */
+        document.addEventListener('keydown', function(e) {
             if (e.key !== 'Escape') return;
             if (sidebar.classList.contains('notif-sidebar--open')) {
                 closeSidebar();
@@ -281,6 +248,79 @@
                 closeModal();
             }
         });
+
+        /* ================= Пометить прочитанным при клике ================= */
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        document.querySelectorAll('.js-notif-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const id = this.dataset.id;
+                if (!id || !csrf) return;
+
+                // не await — уходим по ссылке, запрос уйдёт фоном
+                fetch(`/notifications/${id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    keepalive: true,
+                }).catch(() => {});
+            });
+        });
+
+        /* ================= Прочитать все ================= */
+        const markAllBtn = document.getElementById('markAllReadBtn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                fetch('/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then(() => {
+                    document.querySelectorAll('.notif-item--unread')
+                        .forEach(el => el.classList.remove('notif-item--unread'));
+                    const badge = document.getElementById('notif-badge');
+                    const count = document.getElementById('notifSidebarCount');
+                    if (badge) {
+                        badge.textContent = '0';
+                        badge.classList.add('d-none');
+                    }
+                    if (count) {
+                        count.textContent = '0';
+                    }
+                });
+            });
+        }
+
+        /* ================= Polling счётчика ================= */
+        function refreshUnread() {
+            if (!csrf) return;
+            fetch('/notifications/unread-count', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                })
+                .then(r => r.json())
+                .then(({
+                    count
+                }) => {
+                    const badge = document.getElementById('notif-badge');
+                    const sideCount = document.getElementById('notifSidebarCount');
+                    if (badge) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.classList.toggle('d-none', count === 0);
+                    }
+                    if (sideCount) {
+                        sideCount.textContent = count;
+                        sideCount.style.display = count > 0 ? '' : 'none';
+                    }
+                })
+                .catch(() => {});
+        }
+        setInterval(refreshUnread, 30000);
     });
 </script>
 
@@ -299,7 +339,6 @@
         align-items: flex-end;
     }
 
-    /* ===== Правая группа: колокольчик + профиль ===== */
     .header__actions {
         display: flex;
         align-items: center;
@@ -341,6 +380,10 @@
         line-height: 18px;
         text-align: center;
         box-shadow: 0 0 0 2px #fff;
+    }
+
+    .bell-btn__badge.d-none {
+        display: none;
     }
 
     /* ===== Профиль / тултип ===== */
@@ -449,8 +492,13 @@
     }
 
     @keyframes notifFade {
-        from { opacity: 0; }
-        to   { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
     .notif-sidebar__panel {
@@ -464,14 +512,17 @@
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
         display: flex;
         flex-direction: column;
-        transform: translateX(100%);
-        transition: transform 0.25s ease-out;
         animation: notifSlideIn 0.25s ease-out forwards;
     }
 
     @keyframes notifSlideIn {
-        from { transform: translateX(100%); }
-        to   { transform: translateX(0); }
+        from {
+            transform: translateX(100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
     }
 
     .notif-sidebar__head {
@@ -553,6 +604,13 @@
         font-weight: 600;
         color: #111;
         margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .notif-item__icon {
+        font-size: 16px;
     }
 
     .notif-item__text {
@@ -581,18 +639,22 @@
 
     .notif-sidebar__all {
         display: block;
+        width: 100%;
         text-align: center;
         font-size: 14px;
         color: var(--color-component);
-        text-decoration: none;
+        background: transparent;
+        border: none;
+        cursor: pointer;
         font-weight: 500;
+        padding: 6px 0;
     }
 
     .notif-sidebar__all:hover {
         text-decoration: underline;
     }
 
-    /* ===== Модальное окно телефонов ===== */
+    /* ===== Модалка телефонов ===== */
     .phone-modal {
         position: fixed;
         inset: 0;
@@ -624,8 +686,15 @@
     }
 
     @keyframes phoneModalIn {
-        from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
 
     .phone-modal__close {

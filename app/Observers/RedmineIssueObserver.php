@@ -14,21 +14,19 @@ class RedmineIssueObserver
             return;
         }
 
-        $oldStatusId = (int) $issue->getOriginal('status_id');
-        $newStatusId = (int) $issue->status_id;
+        $old = (int) $issue->getOriginal('status_id');
+        $new = (int) $issue->status_id;
 
-        if ($oldStatusId === $newStatusId) {
+        if ($old === $new) {
             return;
         }
 
         try {
-            app(IssueNotifier::class)->onStatusChanged($issue, $oldStatusId, $newStatusId);
+            app(IssueNotifier::class)->onStatusChanged($issue, $old, $new);
         } catch (\Throwable $e) {
             Log::error('RedmineIssueObserver: onStatusChanged failed', [
-                'issue_id'      => $issue->id,
-                'old_status_id' => $oldStatusId,
-                'new_status_id' => $newStatusId,
-                'error'         => $e->getMessage(),
+                'issue_id' => $issue->id,
+                'error'    => $e->getMessage(),
             ]);
         }
     }

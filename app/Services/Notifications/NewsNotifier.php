@@ -5,7 +5,7 @@ namespace App\Services\Notifications;
 use App\Models\News;
 use App\Models\Worker;
 use App\Notifications\Types\NotificationType;
-
+use Illuminate\Support\Facades\Route;
 class NewsNotifier
 {
     public function __construct(
@@ -30,7 +30,9 @@ class NewsNotifier
                 'notifiable_id'   => $news->id,
                 'title'           => 'Новая новость',
                 'body'            => (string) $news->title,
-                'url'             => route('news.show', $news->id), // подставь свой роут
+                'url' => Route::has('news.show')
+                    ? route('news.show', $news->id)
+                    : (Route::has('news.index') ? route('news.index') : url('/')),
                 'payload'         => ['news_id' => $news->id],
             ],
             $actorWorkerId,
