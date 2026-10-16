@@ -366,20 +366,20 @@
     }
 
     .bell-btn__badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        min-width: 18px;
-        height: 18px;
-        padding: 0 5px;
-        border-radius: 9px;
-        background: #ef4444;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 700;
-        line-height: 18px;
-        text-align: center;
-        box-shadow: 0 0 0 2px #fff;
+position: absolute;
+    top: -3px;
+    right: -5px;
+    min-width: 12px;
+    height: 14px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: var(--color-primary-light);
+    color: var(--color-bg-card);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 0 0 2px;
     }
 
     .bell-btn__badge.d-none {
@@ -547,10 +547,10 @@
         display: inline-block;
         padding: 2px 8px;
         border-radius: 10px;
-        background: #ef4444;
+        background: var(--color-component);
         color: #fff;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 500;
     }
 
     .notif-sidebar__close {
