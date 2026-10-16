@@ -22,7 +22,7 @@ class ProfileController extends Controller
         ]);
 
         $data = $request->validate([
-            'city'   => ['sometimes', 'nullable', 'string', 'regex:/^\d{11}$/'],
+            'city'   => ['sometimes', 'nullable', 'string', 'regex:/^\d{10}$/'],
             'mobile' => ['sometimes', 'nullable', 'string', 'regex:/^\d{4,6}$/'],
         ], [
             'city.regex'   => 'Городской номер должен содержать ровно 11 цифр.',

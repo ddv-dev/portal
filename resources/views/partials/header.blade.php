@@ -9,77 +9,55 @@
                 <span class="logo__text">@yield('title', "Корпоративный портал")</span>
             </a>
 
-            <div class="user-menu" id="userMenu">
-                <button class="button button-white" id="userIconBtn" aria-label="Профиль">
-                    {{ $profile?->name_full ?? session('windows_fio') ?? 'Гость' }}
-                    <span class="user-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+            <div class="col">
+                <div class="header__actions">
+                    {{-- ===== Колокольчик ===== --}}
+                    <button type="button" class="bell-btn" id="openNotifications" aria-label="Уведомления">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
-                    </span>
-                </button>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="bell-btn__badge">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                        @endif
+                    </button>
 
+                    {{-- ===== Профиль ===== --}}
+                    <div class="user-menu" id="userMenu">
+                        <button class="button button-white" id="userIconBtn" aria-label="Профиль">
+                            {{ $profile?->name_full ?? session('windows_fio') ?? 'Гость' }}
+                            <span class="user-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </span>
+                        </button>
 
-                <div class="user-tooltip" id="userTooltip">
-                    {{ $profile['department'] }}{{ $profile['position'] ? ': '.$profile['position'] : '' }}
-                    <br>
-                    Почта: {{ $profile['email'] ?: '—' }}
-                    <br>
-                    Логин: {{ $profile['username'] ?: '—' }}
+                        <div class="user-tooltip" id="userTooltip">
+                            {{ $profile['department'] }}{{ $profile['position'] ? ': '.$profile['position'] : '' }}
+                            <br>
+                            Почта: {{ $profile['email'] ?: '—' }}
+                            <br>
+                            Логин: {{ $profile['username'] ?: '—' }}
+                        </div>
+                    </div>
                 </div>
 
-
-            </div>
-
-            <div class="user-phone-block" id="userPhoneBlock">
-
-                {{-- Городской --}}
-                <form method="POST" action="{{ route('profile.phone.update') }}" class="phone-row">
-                    @csrf
-                    <span class="phone-label">Городской:</span>
-                    <input type="text"
-                        name="city"
-                        id="cityInput"
-                        value="{{ $profile['city_phone'] ?: '' }}"
-                        placeholder="например, 4955322333"
-                        class="phone-input"
-                        readonly>
-                    <button type="button" class="phone-edit-btn" data-target="cityInput" aria-label="Редактировать">
-                        <svg class="icon-edit">
-
-                            <rect width="24" height="24" fill="white" />
-                            <path d="M15.6287 5.12132L4.31497 16.435M15.6287 5.12132L19.1642 8.65685M15.6287 5.12132L17.0429 3.70711C17.4334 3.31658 18.0666 3.31658 18.4571 3.70711L20.5784 5.82843C20.969 6.21895 20.969 6.85212 20.5784 7.24264L19.1642 8.65685M7.85051 19.9706L4.31497 16.435M7.85051 19.9706L19.1642 8.65685M7.85051 19.9706L3.25431 21.0312L4.31497 16.435" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <svg class="icon-save icon-save_sity" style="display:none;">...</svg>
+                {{-- ===== Кнопка открытия попапа телефонов ===== --}}
+                <div class="user-phone-block" id="userPhoneBlock">
+                    <button type="button" class="btn phone-edit-open" id="openPhoneModal">
+                        Изменить мой номер
                     </button>
-                </form>
-
-                {{-- Внутренний --}}
-                <form method="POST" action="{{ route('profile.phone.update') }}" class="phone-row">
-                    @csrf
-                    <span class="phone-label">Внутренний:</span>
-                    <input type="text"
-                        name="mobile"
-                        id="mobileInput"
-                        value="{{ $profile['mobile_phone'] ?: '' }}"
-                        placeholder="от 4 до 6 цифр"
-                        class="phone-input"
-                        readonly>
-                    <button type="button" class="phone-edit-btn" data-target="mobileInput" aria-label="Редактировать">
-                        <svg class="icon-edit icon-save_mob">
-                            <rect width="24" height="24" fill="white" />
-                            <path d="M15.6287 5.12132L4.31497 16.435M15.6287 5.12132L19.1642 8.65685M15.6287 5.12132L17.0429 3.70711C17.4334 3.31658 18.0666 3.31658 18.4571 3.70711L20.5784 5.82843C20.969 6.21895 20.969 6.85212 20.5784 7.24264L19.1642 8.65685M7.85051 19.9706L4.31497 16.435M7.85051 19.9706L19.1642 8.65685M7.85051 19.9706L3.25431 21.0312L4.31497 16.435" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                </form>
-
+                </div>
             </div>
         </div>
 
-        {{-- ===== НАВИГАЦИЯ (горизонтальное меню) ===== --}}
+        {{-- ===== НАВИГАЦИЯ ===== --}}
         <nav class="nav">
             <ul class="nav__list">
                 <li class="nav__item">
@@ -128,68 +106,248 @@
         </nav>
 
     </div>
-
 </header>
+
+{{-- ===== САЙДБАР УВЕДОМЛЕНИЙ ===== --}}
+<div class="notif-sidebar" id="notifSidebar" aria-hidden="true">
+    <div class="notif-sidebar__overlay" data-close-sidebar></div>
+
+    <aside class="notif-sidebar__panel" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
+        <header class="notif-sidebar__head">
+            <h3 class="notif-sidebar__title" id="notifTitle">
+                Уведомления
+                @if (($unreadCount ?? 0) > 0)
+                    <span class="notif-sidebar__count">{{ $unreadCount }}</span>
+                @endif
+            </h3>
+            <button type="button" class="notif-sidebar__close" data-close-sidebar aria-label="Закрыть">&times;</button>
+        </header>
+
+        <div class="notif-sidebar__body">
+            @forelse ($notifications ?? [] as $note)
+                <a href="{{ $note->url ?? '#' }}"
+                   class="notif-item {{ empty($note->read_at) ? 'notif-item--unread' : '' }}">
+                    <div class="notif-item__title">{{ $note->title ?? 'Уведомление' }}</div>
+                    <div class="notif-item__text">{{ $note->message ?? '' }}</div>
+                    <div class="notif-item__date">
+                        {{ \Illuminate\Support\Carbon::parse($note->created_at ?? now())->diffForHumans() }}
+                    </div>
+                </a>
+            @empty
+                <div class="notif-empty">Уведомлений пока нет</div>
+            @endforelse
+        </div>
+
+        <footer class="notif-sidebar__foot">
+            <a href="{{ route('notifications.index') ?? '#' }}" class="notif-sidebar__all">
+                Все уведомления
+            </a>
+        </footer>
+    </aside>
+</div>
+
+{{-- ===== МОДАЛЬНОЕ ОКНО ТЕЛЕФОНОВ ===== --}}
+<div class="phone-modal" id="phoneModal" aria-hidden="true">
+    <div class="phone-modal__overlay" data-close-modal></div>
+    <div class="phone-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="phoneModalTitle">
+        <button type="button" class="phone-modal__close" data-close-modal aria-label="Закрыть">&times;</button>
+
+        <h3 class="phone-modal__title" id="phoneModalTitle">Изменить номера телефонов</h3>
+
+        <form method="POST" action="{{ route('profile.phone.update') }}" class="phone-modal__form" id="phoneModalForm">
+            @csrf
+
+            @if ($errors->any())
+                <div class="phone-modal__errors">
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="phone-modal__field">
+                <label for="modalCityInput">Городской номер</label>
+                <input type="text"
+                    name="city"
+                    id="modalCityInput"
+                    value="{{ old('city', $profile['city_phone'] ?: '') }}"
+                    placeholder="например, 4955322333"
+                    inputmode="numeric"
+                    autocomplete="off">
+                <small class="phone-modal__hint">10 цифр, без пробелов и дефисов. Оставьте пустым, чтобы удалить.</small>
+            </div>
+
+            <div class="phone-modal__field">
+                <label for="modalMobileInput">Внутренний номер</label>
+                <input type="text"
+                    name="mobile"
+                    id="modalMobileInput"
+                    value="{{ old('mobile', $profile['mobile_phone'] ?: '') }}"
+                    placeholder="от 4 до 6 цифр"
+                    inputmode="numeric"
+                    autocomplete="off">
+                <small class="phone-modal__hint">от 4 до 6 цифр. Оставьте пустым, чтобы удалить.</small>
+            </div>
+
+            <div class="phone-modal__actions">
+                <button type="button" class="btn btn-secondary" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.phone-edit-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+    document.addEventListener('DOMContentLoaded', function () {
+        /* ===== Попап телефонов ===== */
+        const modal   = document.getElementById('phoneModal');
+        const openBtn = document.getElementById('openPhoneModal');
+        const form    = document.getElementById('phoneModalForm');
+        const cityInput   = document.getElementById('modalCityInput');
+        const mobileInput = document.getElementById('modalMobileInput');
+
+        function openModal() {
+            modal.classList.add('phone-modal--open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            cityInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.remove('phone-modal--open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+
+        modal.querySelectorAll('[data-close-modal]').forEach(el => {
+            el.addEventListener('click', closeModal);
+        });
+
+        form.addEventListener('submit', function (e) {
+            const city   = cityInput.value.trim();
+            const mobile = mobileInput.value.trim();
+
+            if (city !== '' && !/^\d{10}$/.test(city)) {
                 e.preventDefault();
+                alert('Городской номер должен содержать ровно 10 цифр (например, 4955322333).');
+                cityInput.focus();
+                return;
+            }
 
-                const input = document.getElementById(this.dataset.target);
-                const iconEdit = this.querySelector('.icon-edit');
-                const iconSave = this.querySelector('.icon-save');
-                const form = input.closest('form');
+            if (mobile !== '' && !/^\d{4,6}$/.test(mobile)) {
+                e.preventDefault();
+                alert('Внутренний номер должен содержать от 4 до 6 цифр.');
+                mobileInput.focus();
+                return;
+            }
+        });
 
-                // Ещё не редактируем — включаем режим
-                if (input.hasAttribute('readonly')) {
-                    input.removeAttribute('readonly');
-                    input.focus();
-                    iconEdit.style.display = 'none';
-                    iconSave.style.display = 'inline';
-                    return;
-                }
+        @if ($errors->any())
+            openModal();
+        @endif
 
-                // Валидация на клиенте
-                const type = input.name; // 'city' | 'mobile'
-                const value = input.value.trim();
+        /* ===== Сайдбар уведомлений ===== */
+        const sidebar    = document.getElementById('notifSidebar');
+        const bellBtn    = document.getElementById('openNotifications');
 
-                if (value !== '') {
-                    if (type === 'city' && !/^\d{11}$/.test(value)) {
-                        alert('Городской номер должен содержать ровно 11 цифр (например, 4955322333).');
-                        input.focus();
-                        return;
-                    }
-                    if (type === 'mobile' && !/^\d{4,6}$/.test(value)) {
-                        alert('Внутренний номер должен содержать от 4 до 6 цифр.');
-                        input.focus();
-                        return;
-                    }
-                }
+        function openSidebar() {
+            sidebar.classList.add('notif-sidebar--open');
+            sidebar.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
 
-                // Отправляем форму обычным POST — страница перезагрузится
-                form.submit();
-            });
+        function closeSidebar() {
+            sidebar.classList.remove('notif-sidebar--open');
+            sidebar.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        if (bellBtn) bellBtn.addEventListener('click', openSidebar);
+
+        sidebar.querySelectorAll('[data-close-sidebar]').forEach(el => {
+            el.addEventListener('click', closeSidebar);
+        });
+
+        // Esc закрывает сначала сайдбар, потом попап
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            if (sidebar.classList.contains('notif-sidebar--open')) {
+                closeSidebar();
+                return;
+            }
+            if (modal.classList.contains('phone-modal--open')) {
+                closeModal();
+            }
         });
     });
 </script>
 
 <style>
-    .site-header {
+    /* ===== Шапка ===== */
+    .header__top {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 12px 24px;
-        background: #fff;
-        border-bottom: 1px solid #e5e7eb;
+        justify-content: space-between;
     }
 
+    .header__top .col {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    /* ===== Правая группа: колокольчик + профиль ===== */
+    .header__actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* ===== Колокольчик ===== */
+    .bell-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 50%;
+        background: var(--color-component);
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .bell-btn:hover {
+        background: var(--color-primary-light);
+    }
+
+    .bell-btn__badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 18px;
+        text-align: center;
+        box-shadow: 0 0 0 2px #fff;
+    }
+
+    /* ===== Профиль / тултип ===== */
     .user-menu {
         position: relative;
         display: inline-block;
-        margin-left: auto;
     }
-
 
     .user-icon {
         display: flex;
@@ -212,9 +370,7 @@
     .user-tooltip {
         position: absolute;
         top: calc(100% + 8px);
-        /* снизу от иконки */
         right: 0;
-        /* выравнивание по правому краю */
         background: var(--color-primary-light);
         color: white;
         font-weight: 600;
@@ -223,7 +379,6 @@
         font-size: 14px;
         white-space: nowrap;
         box-shadow: 0 2px 6px var(--color-primary-light);
-
         opacity: 0;
         visibility: hidden;
         transform: translateY(-4px);
@@ -247,65 +402,340 @@
         transform: translateY(0);
     }
 
+    /* ===== Блок кнопки в шапке ===== */
+    .user-phone-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        padding: 8px 0 0;
+    }
 
+    .phone-edit-open {
+        margin-top: 4px;
+        padding: 4px 10px;
+        font-size: 12px;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--color-primary-light);
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
 
+    .phone-edit-open:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
 
+    /* ===== Сайдбар уведомлений ===== */
+    .notif-sidebar {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: none;
+    }
 
-    .phone-row {
+    .notif-sidebar.notif-sidebar--open {
+        display: block;
+    }
+
+    .notif-sidebar__overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+        animation: notifFade 0.2s ease-out;
+    }
+
+    @keyframes notifFade {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    .notif-sidebar__panel {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 380px;
+        max-width: 92vw;
+        background: #fff;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.25s ease-out;
+        animation: notifSlideIn 0.25s ease-out forwards;
+    }
+
+    @keyframes notifSlideIn {
+        from { transform: translateX(100%); }
+        to   { transform: translateX(0); }
+    }
+
+    .notif-sidebar__head {
         display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .notif-sidebar__title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .notif-sidebar__count {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .notif-sidebar__close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        font-size: 24px;
+        line-height: 1;
+        color: #666;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .notif-sidebar__close:hover {
+        background: #f3f4f6;
+        color: #111;
+    }
+
+    .notif-sidebar__body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    .notif-item {
+        display: block;
+        padding: 12px 20px;
+        text-decoration: none;
+        color: #222;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.15s;
+    }
+
+    .notif-item:hover {
+        background: #f9fafb;
+    }
+
+    .notif-item--unread {
+        background: #eff6ff;
+        border-left: 3px solid var(--color-component);
+    }
+
+    .notif-item--unread:hover {
+        background: #dbeafe;
+    }
+
+    .notif-item__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 4px;
+    }
+
+    .notif-item__text {
+        font-size: 13px;
+        color: #555;
+        line-height: 1.4;
         margin-bottom: 6px;
     }
 
-    .phone-label {
+    .notif-item__date {
+        font-size: 11px;
+        color: #9ca3af;
+    }
+
+    .notif-empty {
+        padding: 40px 20px;
+        text-align: center;
+        color: #9ca3af;
         font-size: 14px;
-        color: #555;
-        white-space: nowrap;
     }
 
-    .phone-input {
-        flex: 1;
-        min-width: 0;
-        padding: 4px 8px;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        background: transparent;
-        font-size: 14px;
-        color: #222;
-        transition: border-color 0.2s, background 0.2s;
+    .notif-sidebar__foot {
+        padding: 12px 20px;
+        border-top: 1px solid #e5e7eb;
     }
 
-    .phone-input[readonly] {
-        cursor: default;
-        border-color: transparent;
-    }
-
-    .phone-input:not([readonly]) {
-        border-color: var(--color-component, #4a90d9);
-        background: #fff;
-        cursor: text;
-    }
-
-    .phone-edit-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .phone-edit-btn:hover {
-        background: #f0f0f0;
-    }
-
-    .phone-edit-btn svg {
+    .notif-sidebar__all {
         display: block;
+        text-align: center;
+        font-size: 14px;
+        color: var(--color-component);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .notif-sidebar__all:hover {
+        text-decoration: underline;
+    }
+
+    /* ===== Модальное окно телефонов ===== */
+    .phone-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 1000;
+    }
+
+    .phone-modal.phone-modal--open {
+        display: block;
+    }
+
+    .phone-modal__overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+    }
+
+    .phone-modal__dialog {
+        position: relative;
+        max-width: 460px;
+        width: calc(100% - 32px);
+        margin: 8vh auto 0;
+        padding: 24px 24px 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        animation: phoneModalIn 0.18s ease-out;
+    }
+
+    @keyframes phoneModalIn {
+        from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .phone-modal__close {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        font-size: 24px;
+        line-height: 1;
+        color: #666;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .phone-modal__close:hover {
+        background: #f3f4f6;
+        color: #111;
+    }
+
+    .phone-modal__title {
+        margin: 0 0 16px;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .phone-modal__form {
+        margin: 0;
+    }
+
+    .phone-modal__errors {
+        margin-bottom: 14px;
+        padding: 10px 12px;
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        color: #b91c1c;
+        border-radius: 6px;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .phone-modal__field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 14px;
+    }
+
+    .phone-modal__field label {
+        font-size: 13px;
+        color: #444;
+        font-weight: 500;
+    }
+
+    .phone-modal__field input {
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #111;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .phone-modal__field input:focus {
+        outline: none;
+        border-color: var(--color-component, #4a90d9);
+        box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+    }
+
+    .phone-modal__hint {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .phone-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--color-component, #4a90d9);
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        filter: brightness(0.95);
+    }
+
+    .btn-secondary {
+        background: #fff;
+        color: #333;
+        border-color: #d1d5db;
+    }
+
+    .btn-secondary:hover {
+        background: #f3f4f6;
     }
 </style>
