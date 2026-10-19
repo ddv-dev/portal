@@ -93,19 +93,13 @@
             @forelse ($notifications ?? [] as $note)
             @php
             $isUnread = empty($note->read_at);
-            $typeIcon = match ($note->type) {
-            'issue_comment' => '💬',
-            'issue_status_changed' => '🔄',
-            'news_created' => '📰',
-            default => '🔔',
-            };
             @endphp
 
             <a href="{{ $note->url ?: '#' }}"
                 class="notif-item js-notif-link {{ $isUnread ? 'notif-item--unread' : '' }}"
                 data-id="{{ $note->id }}">
                 <div class="notif-item__title">
-                    <span class="notif-item__icon">{{ $typeIcon }}</span>
+                    <x-notification-icon :type="$note->type" :size="18" class="notif-item__icon" />
                     {{ $note->title }}
                 </div>
                 @if ($note->body)
@@ -173,6 +167,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        /* ================= CSRF ================= */
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
         /* ================= Попап телефонов ================= */
         const modal = document.getElementById('phoneModal');
         const openBtn = document.getElementById('openPhoneModal');
@@ -249,23 +246,69 @@
             }
         });
 
-        /* ================= Пометить прочитанным при клике ================= */
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+        /* ================= Обновление бейджа ================= */
+        function updateUnreadBadge(delta) {
+            const badge = document.getElementById('notif-badge');
+            const sideCount = document.getElementById('notifSidebarCount');
+            if (!badge) return;
 
+            const current = parseInt(badge.textContent || '0', 10) || 0;
+            const next = Math.max(0, current + delta);
+
+            badge.textContent = next > 99 ? '99+' : String(next);
+            badge.classList.toggle('d-none', next === 0);
+
+            if (sideCount) {
+                sideCount.textContent = String(next);
+                sideCount.style.display = next > 0 ? '' : 'none';
+            }
+        }
+
+        function setUnreadBadge(value) {
+            const badge = document.getElementById('notif-badge');
+            const sideCount = document.getElementById('notifSidebarCount');
+            if (!badge) return;
+
+            const v = Math.max(0, parseInt(value, 10) || 0);
+            badge.textContent = v > 99 ? '99+' : String(v);
+            badge.classList.toggle('d-none', v === 0);
+
+            if (sideCount) {
+                sideCount.textContent = String(v);
+                sideCount.style.display = v > 0 ? '' : 'none';
+            }
+        }
+
+        /* ================= Пометить прочитанным при клике ================= */
         document.querySelectorAll('.js-notif-link').forEach(link => {
             link.addEventListener('click', function() {
                 const id = this.dataset.id;
+                const wasUnread = this.classList.contains('notif-item--unread');
+
+                // Оптимистично снимаем «непрочитанное» состояние
+                if (wasUnread) {
+                    this.classList.remove('notif-item--unread');
+                    updateUnreadBadge(-1);
+                }
+
                 if (!id || !csrf) return;
 
-                // не await — уходим по ссылке, запрос уйдёт фоном
-                fetch(`/notifications/${id}/read`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    keepalive: true,
-                }).catch(() => {});
+                const url = `/notifications/${id}/read`;
+                const body = new URLSearchParams({ _token: csrf });
+
+                // sendBeacon надёжнее при уходе со страницы
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(url, body);
+                } else {
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        keepalive: true,
+                    }).catch(() => {});
+                }
             });
         });
 
@@ -282,16 +325,8 @@
                 }).then(() => {
                     document.querySelectorAll('.notif-item--unread')
                         .forEach(el => el.classList.remove('notif-item--unread'));
-                    const badge = document.getElementById('notif-badge');
-                    const count = document.getElementById('notifSidebarCount');
-                    if (badge) {
-                        badge.textContent = '0';
-                        badge.classList.add('d-none');
-                    }
-                    if (count) {
-                        count.textContent = '0';
-                    }
-                });
+                    setUnreadBadge(0);
+                }).catch(() => {});
             });
         }
 
@@ -304,23 +339,19 @@
                     },
                 })
                 .then(r => r.json())
-                .then(({
-                    count
-                }) => {
-                    const badge = document.getElementById('notif-badge');
-                    const sideCount = document.getElementById('notifSidebarCount');
-                    if (badge) {
-                        badge.textContent = count > 99 ? '99+' : count;
-                        badge.classList.toggle('d-none', count === 0);
-                    }
-                    if (sideCount) {
-                        sideCount.textContent = count;
-                        sideCount.style.display = count > 0 ? '' : 'none';
-                    }
+                .then(({ count }) => {
+                    setUnreadBadge(count);
                 })
                 .catch(() => {});
         }
         setInterval(refreshUnread, 30000);
+
+        /* ================= Обновление после возврата (bfcache) ================= */
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                refreshUnread();
+            }
+        });
     });
 </script>
 
@@ -366,24 +397,20 @@
     }
 
     .bell-btn__badge {
-position: absolute;
-    top: -3px;
-    right: -5px;
-    min-width: 12px;
-    height: 14px;
-    padding: 0 5px;
-    border-radius: 10px;
-    background: var(--color-primary-light);
-    color: var(--color-bg-card);
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 16px;
-    text-align: center;
-    box-shadow: 0 0 0 2px;
-    }
-
-    .bell-btn__badge.d-none {
-        display: none;
+        position: absolute;
+        top: -3px;
+        right: -5px;
+        min-width: 12px;
+        height: 14px;
+        padding: 0 5px;
+        border-radius: 10px;
+        background: var(--color-primary-light);
+        color: var(--color-bg-card);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 14px;
+        text-align: center;
+        box-shadow: 0 0 0 2px #fff;
     }
 
     .bell-btn__badge.d-none {
@@ -496,13 +523,8 @@ position: absolute;
     }
 
     @keyframes notifFade {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
     .notif-sidebar__panel {
@@ -520,13 +542,8 @@ position: absolute;
     }
 
     @keyframes notifSlideIn {
-        from {
-            transform: translateX(100%);
-        }
-
-        to {
-            transform: translateX(0);
-        }
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
     }
 
     .notif-sidebar__head {
@@ -614,7 +631,9 @@ position: absolute;
     }
 
     .notif-item__icon {
-        font-size: 16px;
+        flex-shrink: 0;
+        display: block;
+        vertical-align: middle;
     }
 
     .notif-item__text {
@@ -658,6 +677,17 @@ position: absolute;
         text-decoration: underline;
     }
 
+    /* ===== Иконки уведомлений ===== */
+    .notif-icon {
+        flex-shrink: 0;
+        display: block;
+    }
+
+    .notif-icon--issue_comment        { color: #3b82f6; }
+    .notif-icon--issue_status_changed { color: #f59e0b; }
+    .notif-icon--news_created         { color: #10b981; }
+    .notif-icon--default              { color: #6b7280; }
+
     /* ===== Модалка телефонов ===== */
     .phone-modal {
         position: fixed;
@@ -690,15 +720,8 @@ position: absolute;
     }
 
     @keyframes phoneModalIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px) scale(0.98);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+        from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .phone-modal__close {
