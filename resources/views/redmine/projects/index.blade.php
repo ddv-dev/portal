@@ -122,6 +122,9 @@
 
                     <div class="rm-issue-card__head">
                         <span class="rm-issue-card__id">#{{ $issue->id }}</span>
+                                                <span class="rm-issue-card__tracker">
+                            {{ $issue->tracker?->name ?? '—' }}
+                        </span>
                         <span class="rm-issue-card__status">{{ $statusName ?? '—' }}</span>
                     </div>
 
@@ -130,11 +133,9 @@
                     </div>
 
                     <div class="rm-issue-card__meta">
-                        <span class="rm-issue-card__tracker">
-                            {{ $issue->tracker?->name ?? '—' }}
-                        </span>
+
                         <span class="rm-issue-card__date">
-                            {{ $issue->updated_on?->format('d.m.Y H:i') }}
+                            Создана: {{ $issue->updated_on?->format('d.m.Y H:i') }}
                         </span>
                     </div>
                 </a>

@@ -28,14 +28,15 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
             <tr>
                 <th>Проект</th>
                 <td>{{ $issue->project?->name ?? '—' }}</td>
-                <th>Статус</th>
-                <td>{{ $issue->status?->name ?? '—' }}</td>
-            </tr>
-            <tr>
                 <th>Трекер</th>
                 <td>{{ $issue->tracker?->name ?? '—' }}</td>
-                <th>Приоритет</th>
-                <td>{{ $issue->priority?->name ?? '—' }}</td>
+
+            </tr>
+            <tr>
+
+                <!-- <th>Приоритет</th>
+                <td>{{ $issue->priority?->name ?? '—' }}</td>-->
+
             </tr>
             <tr>
                 <th>Автор</th>
@@ -56,12 +57,6 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
                 </td>
             </tr>
             <tr>
-                <th>Начало</th>
-                <td>{{ $issue->start_date?->format('d.m.Y') ?? '—' }}</td>
-                <th>Срок</th>
-                <td>{{ $issue->due_date?->format('d.m.Y') ?? '—' }}</td>
-            </tr>
-            <tr>
                 <th>Создано</th>
                 <td>{{ $issue->created_on?->format('d.m.Y H:i') ?? '—' }}</td>
                 <th>Обновлено</th>
@@ -69,18 +64,14 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
             </tr>
             @if($issue->closed_on)
             <tr>
+
                 <th>Закрыто</th>
                 <td colspan="3">{{ $issue->closed_on->format('d.m.Y H:i') }}</td>
             </tr>
+            @else
+            <th>Статус</th>
+            <td>{{ $issue->status?->name ?? '—' }}</td>
             @endif
-        </table>
-    </section>
-
-
-    @if($customValues->isNotEmpty())
-    <section class="rm-card">
-        <h3 class="rm-card__title">Дополнительные поля</h3>
-        <table class="rm-meta">
             @foreach($customValues as $cv)
             <tr>
                 <th>{{ $cv->customField?->name ?? '—' }}</th>
@@ -97,8 +88,12 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
             </tr>
             @endforeach
         </table>
+  
+
     </section>
-    @endif
+
+
+
     {{-- ОПИСАНИЕ --}}
     <section class="rm-card">
         <h3 class="rm-card__title">Описание</h3>
@@ -235,7 +230,7 @@ $issueAttachments = \App\Models\Redmine\RedmineAttachment::where('container_type
     }
 
     .rm-meta th,
-    .rm-meta td {
+    .rm-meta td{
         padding: 6px 8px;
         text-align: left;
         font-size: 14px;
