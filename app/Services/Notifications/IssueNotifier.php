@@ -42,13 +42,21 @@ class IssueNotifier
         );
     }
 
-    public function onStatusChanged(RedmineIssue $issue, int $oldStatusId, int $newStatusId): void
-    {
+    public function onStatusChanged(
+        RedmineIssue $issue,
+        int $oldStatusId,
+        int $newStatusId,
+        ?int $journalId = null,
+    ): void {
         $recipientWorkerId = $this->workerIdByRedmine($issue->author_id);
         if (!$recipientWorkerId) return;
 
         $old = RedmineIssueStatus::find($oldStatusId)?->name ?? "id={$oldStatusId}";
         $new = RedmineIssueStatus::find($newStatusId)?->name ?? "id={$newStatusId}";
+
+        $dedup = $journalId
+            ? "issue_status:{$issue->id}:{$oldStatusId}->{$newStatusId}:j{$journalId}"
+            : "issue_status:{$issue->id}:{$oldStatusId}->{$newStatusId}:" . now()->timestamp;
 
         $this->notifications->notify(
             $recipientWorkerId,
@@ -63,10 +71,11 @@ class IssueNotifier
                     'issue_id'      => $issue->id,
                     'old_status_id' => $oldStatusId,
                     'new_status_id' => $newStatusId,
+                    'journal_id'    => $journalId,
                 ],
             ],
             null,
-            "issue_status:{$issue->id}:{$oldStatusId}->{$newStatusId}",
+            $dedup,
         );
     }
 

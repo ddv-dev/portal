@@ -8,11 +8,6 @@ final class NotificationType
     public const ISSUE_COMMENT        = 'issue_comment';
     public const NEWS_CREATED         = 'news_created';
 
-    /**
-     * Все известные типы — удобно для валидации, фильтров, сидов.
-     *
-     * @return string[]
-     */
     public static function all(): array
     {
         return [
@@ -22,11 +17,6 @@ final class NotificationType
         ];
     }
 
-    /**
-     * Человекочитаемые подписи — пригодятся во вьюхах и в письмах.
-     *
-     * @return array<string, string>
-     */
     public static function labels(): array
     {
         return [
