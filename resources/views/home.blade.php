@@ -10,7 +10,7 @@
 
 <div class="search-container">
         <form method="GET" action="{{ route('home') }}" id="searchForm">
-                <input type="text" name="search" class="search-input" placeholder="Поиск по ФИО, отделу, телефону..."
+                <input type="text" name="search" class="search-input" placeholder="Поиск новостей и объявлений..."
                     value="{{ request()->input('search') }}" id="searchInput">
                 <button class="button button--secondary" type="submit">
                     Найти
