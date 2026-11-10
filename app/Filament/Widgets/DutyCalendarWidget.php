@@ -5,13 +5,22 @@ namespace App\Filament\Widgets;
 use App\Models\DutyWorker;
 use App\Models\DutyRole;
 use Filament\Forms;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
+use Saade\FilamentFullCalendar\Actions;
+use Filament\Schemas\Schema;
 
 class DutyCalendarWidget extends FullCalendarWidget
 {
-    public string | \Illuminate\Database\Eloquent\Model | null $model = DutyWorker::class;
+    public string | Model | null $model = DutyWorker::class;
 
+    public function config(): array
+    {
+        return [
+            'selectable' => true,
+        ];
+    }
     protected static function currentUser(): ?\App\Models\User
     {
         $user = Auth::user();
@@ -28,13 +37,16 @@ class DutyCalendarWidget extends FullCalendarWidget
         return (bool) static::currentUser()?->hasPermission('duty_manage_all');
     }
 
+    /**
+     * События календаря: записи duty_worker за видимый диапазон.
+     */
     public function fetchEvents(array $fetchInfo): array
     {
         $query = DutyWorker::query()
             ->with('role')
             ->whereBetween('duty_date', [$fetchInfo['start'], $fetchInfo['end']]);
 
-        if (!static::hasFullAccess()) {
+        if (! static::hasFullAccess()) {
             $allowed = static::allowedRoleIds();
             if (empty($allowed)) {
                 return [];
@@ -43,17 +55,20 @@ class DutyCalendarWidget extends FullCalendarWidget
         }
 
         return $query->get()->map(fn(DutyWorker $w) => [
-            'id'    => $w->id,
-            'title' => $w->fullname . ($w->role ? ' — ' . $w->role->name : ''),
-            'start' => $w->duty_date?->toDateString(),
+            'id'     => $w->id,
+            'title'  => $w->fullname . ($w->role ? ' — ' . $w->role->name : ''),
+            'start'  => $w->duty_date?->toDateString(),
             'allDay' => true,
         ])->all();
     }
 
+    /**
+     * Форма и для создания (клик по пустому дню), и для редактирования (клик по событию).
+     */
     public function getFormSchema(): array
     {
-        $allowedIds = static::allowedRoleIds();
-        $fullAccess = static::hasFullAccess();
+        $allowedIds  = static::allowedRoleIds();
+        $fullAccess  = static::hasFullAccess();
         $defaultRole = count($allowedIds) === 1 ? $allowedIds[0] : null;
 
         return [
@@ -77,27 +92,22 @@ class DutyCalendarWidget extends FullCalendarWidget
                     DutyRole::whereIn('id', $allowedIds)->pluck('name', 'id')->toArray()
                 )
                 ->default($defaultRole)
-                ->disabled(fn() => !$fullAccess && count($allowedIds) === 1)
+                ->disabled(fn() => ! $fullAccess && count($allowedIds) === 1)
                 ->dehydrated()
                 ->required()
-                ->visible(fn() => $fullAccess || !empty($allowedIds)),
+                ->visible(fn() => $fullAccess || ! empty($allowedIds)),
         ];
     }
-
-    public function onEventClick(array $event): void
+    
+    protected function headerActions(): array
     {
-        // Стандартное поведение: открыть форму редактирования
-        parent::onEventClick($event);
-    }
-
-    public function onDateSelect(string $start, ?string $end, bool $allDay, ?array $view, ?array $resource): void
-    {
-        // Ваша проверка прав (если нужно)
-        if (!static::hasFullAccess() && empty(static::allowedRoleIds())) {
-            return;
-        }
-
-        // Рекомендуется вызвать родительский метод для сохранения стандартного поведения
-        parent::onDateSelect($start, $end, $allDay, $view, $resource);
+        return [
+            Actions\CreateAction::make()
+                ->mountUsing(function (Schema $schema, array $arguments): void {
+                    $schema->fill([
+                        'duty_date' => $arguments['start'] ?? null,
+                    ]);
+                }),
+        ];
     }
 }

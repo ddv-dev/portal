@@ -13,9 +13,6 @@ use App\Models\News;
 use App\Observers\NewsObserver;
 use App\Services\Notifications\NotificationService;
 use App\Observers\RedmineIssueObserver;
-use Illuminate\Support\Facades\Gate;
-use App\Models\Duty;
-use App\Policies\DutyPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -57,6 +54,5 @@ class AppServiceProvider extends ServiceProvider
         RedmineIssue::observe(RedmineIssueObserver::class);
         News::observe(NewsObserver::class);
 
-        Gate::policy(Duty::class, DutyPolicy::class);
     }
 }

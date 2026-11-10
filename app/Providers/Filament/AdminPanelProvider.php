@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->plugin(FilamentFullCalendarPlugin::make())
+            ->plugin(FilamentFullCalendarPlugin::make()->selectable(true))
             ->colors([
                 'primary' => Color::Blue,
             ])

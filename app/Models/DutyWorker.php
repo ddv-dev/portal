@@ -20,10 +20,7 @@ class DutyWorker extends Model
     protected $casts = [
         'duty_date' => 'date',
     ];
-    public function duty(): BelongsTo
-    {
-        return $this->belongsTo(Duty::class, 'duty_id');
-    }
+
 
     public function role(): BelongsTo
     {
