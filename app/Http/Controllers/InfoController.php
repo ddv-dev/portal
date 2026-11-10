@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\Request;
 use App\Models\Info;
 use App\Models\InfoType;
@@ -62,7 +63,7 @@ class InfoController extends Controller
             // Общая статистика
             $totalCount = Info::query()->count();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading info: ' . $e->getMessage());
             $infos = collect();
             $infoTypes = collect();

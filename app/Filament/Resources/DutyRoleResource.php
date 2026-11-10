@@ -2,11 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use App\Filament\Resources\DutyRoleResource\Pages\ListDutyRoles;
+use App\Filament\Resources\DutyRoleResource\Pages\CreateDutyRole;
+use App\Filament\Resources\DutyRoleResource\Pages\EditDutyRole;
 use App\Filament\Resources\DutyRoleResource\Pages;
 use App\Filament\Resources\DutyRoleResource\RelationManagers;
 use App\Models\DutyRole;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,12 +24,12 @@ class DutyRoleResource extends Resource
 {
     protected static ?string $model = DutyRole::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\TextInput::make('name')
+        return $schema->components([
+            TextInput::make('name')
                 ->label('Название роли')
                 ->required()
                 ->unique(ignoreRecord: true),
@@ -33,11 +40,11 @@ class DutyRoleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Роль'),
+                TextColumn::make('name')->label('Роль'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
     public static function getRelations(): array
@@ -50,9 +57,9 @@ class DutyRoleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDutyRoles::route('/'),
-            'create' => Pages\CreateDutyRole::route('/create'),
-            'edit' => Pages\EditDutyRole::route('/{record}/edit'),
+            'index' => ListDutyRoles::route('/'),
+            'create' => CreateDutyRole::route('/create'),
+            'edit' => EditDutyRole::route('/{record}/edit'),
         ];
     }
 }

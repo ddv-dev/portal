@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Throwable;
+use RuntimeException;
 use App\Models\Worker;
 use Illuminate\Console\Command;
 
@@ -25,7 +27,7 @@ class SyncAdLogins extends Command
 
         try {
             $adUsers = $this->loadAdUsers($file);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error("Ошибка чтения: " . $e->getMessage());
             return self::FAILURE;
         }
@@ -98,12 +100,12 @@ private function loadAdUsers(string $file): array
     if ($ext === 'json') {
         $raw = @file_get_contents($file);
         if ($raw === false) {
-            throw new \RuntimeException("Не могу прочитать JSON-файл: {$file}");
+            throw new RuntimeException("Не могу прочитать JSON-файл: {$file}");
         }
 
         $data = json_decode($raw, true);
         if (!is_array($data)) {
-            throw new \RuntimeException("Некорректный JSON в файле: {$file}");
+            throw new RuntimeException("Некорректный JSON в файле: {$file}");
         }
 
         return array_map(fn($u) => [
@@ -115,7 +117,7 @@ private function loadAdUsers(string $file): array
     // ---------- CSV ----------
     $fh = @fopen($file, 'r');
     if ($fh === false) {
-        throw new \RuntimeException("Не могу открыть файл: {$file}");
+        throw new RuntimeException("Не могу открыть файл: {$file}");
     }
 
     $firstLine = fgets($fh);
@@ -150,7 +152,7 @@ private function loadAdUsers(string $file): array
 
     if ($nameIdx === false || $loginIdx === false) {
         fclose($fh);
-        throw new \RuntimeException(
+        throw new RuntimeException(
             "В CSV нет колонок displayName/sAMAccountName. Найдено: " . implode(', ', $header)
         );
     }

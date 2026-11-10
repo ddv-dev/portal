@@ -2,6 +2,9 @@
 
 namespace App\Services\Redmine;
 
+use App\Models\Redmine\RedmineIssueStatus;
+use App\Models\Redmine\RedmineEnumeration;
+use Throwable;
 use App\Models\Redmine\RedmineIssue;
 use App\Models\Redmine\RedmineJournal;
 use App\Models\Redmine\RedmineUser;
@@ -49,25 +52,25 @@ class RedmineIssueService
         }
 
         // Статус по умолчанию для трекера
-        $statusId = (int) (\App\Models\Redmine\RedmineTracker::where('id', $data['tracker_id'])
+        $statusId = (int) (RedmineTracker::where('id', $data['tracker_id'])
             ->value('default_status_id') ?? 0);
 
         if (!$statusId) {
             // Фолбэк: первый открытый статус
-            $statusId = (int) (\App\Models\Redmine\RedmineIssueStatus::where('is_closed', 0)
+            $statusId = (int) (RedmineIssueStatus::where('is_closed', 0)
                 ->orderBy('position')
                 ->value('id') ?? 1);
         }
 
         // Приоритет по умолчанию
-        $priorityId = (int) (\App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+        $priorityId = (int) (RedmineEnumeration::ofType('IssuePriority')
             ->active()
             ->where('is_default', 1)
             ->value('id') ?? 0);
 
         if (!$priorityId) {
             // Фолбэк: первый активный
-            $priorityId = (int) (\App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+            $priorityId = (int) (RedmineEnumeration::ofType('IssuePriority')
                 ->active()
                 ->orderBy('position')
                 ->value('id') ?? 2);
@@ -111,7 +114,7 @@ class RedmineIssueService
 
                 return $issue;
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Redmine issue create failed', [
                 'error' => $e->getMessage(),
                 'data'  => $data,
@@ -161,7 +164,7 @@ class RedmineIssueService
             if ($issue) {
                 try {
                     app(IssueNotifier::class)->onComment($issue, $journal, $user);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     Log::error('IssueNotifier::onComment failed', [
                         'issue_id'   => $issueId,
                         'journal_id' => $journal->id,
@@ -172,7 +175,7 @@ class RedmineIssueService
             // -----------------------------------------------------------
 
             return $journal;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Redmine comment failed', [
                 'issue_id' => $issueId,
                 'error'    => $e->getMessage(),
@@ -185,9 +188,9 @@ class RedmineIssueService
     public function getFormDictionaries(): array
     {
         return [
-            'trackers' => \App\Models\Redmine\RedmineTracker::orderBy('position')->get(['id', 'name']),
-            'statuses' => \App\Models\Redmine\RedmineIssueStatus::orderBy('position')->get(['id', 'name', 'is_closed']),
-            'priorities' => \App\Models\Redmine\RedmineEnumeration::ofType('IssuePriority')
+            'trackers' => RedmineTracker::orderBy('position')->get(['id', 'name']),
+            'statuses' => RedmineIssueStatus::orderBy('position')->get(['id', 'name', 'is_closed']),
+            'priorities' => RedmineEnumeration::ofType('IssuePriority')
                 ->active()
                 ->orderBy('position')
                 ->get(['id', 'name', 'is_default']),

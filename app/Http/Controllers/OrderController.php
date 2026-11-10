@@ -60,7 +60,7 @@ class OrderController extends Controller
                 ->orderBy('year', 'desc')
                 ->pluck('year');
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading orders: ' . $e->getMessage());
             $orders = collect();
             $activeCount = 0;

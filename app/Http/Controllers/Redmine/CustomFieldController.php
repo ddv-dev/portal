@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Redmine;
 
+use App\Services\Redmine\RedmineIssueService;
 use App\Http\Controllers\Controller;
 use App\Services\Redmine\RedmineCustomFieldService;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class CustomFieldController extends Controller
         return response()->json(['fields' => $fields]);
     }
     // CustomFieldController
-    public function trackers(Request $request, \App\Services\Redmine\RedmineIssueService $issues)
+    public function trackers(Request $request, RedmineIssueService $issues)
     {
         $projectId = (int) $request->query('project_id');
         if (!$projectId) {

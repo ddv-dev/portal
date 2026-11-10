@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Throwable;
 use App\Services\ProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -45,7 +46,7 @@ class ProfileController extends Controller
             if ($request->has('mobile')) {
                 $this->profile->syncMobilePhone($worker, $data['mobile'] ?? '');
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('updatePhone ERROR', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),

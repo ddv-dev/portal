@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Throwable;
 use App\Models\Worker;
 use Illuminate\Support\Facades\Log;
 
@@ -64,7 +65,7 @@ class WorkerProvisioningService
             ]);
 
             return $worker;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Worker attach failed, retrying by login_ad', [
                 'login_ad' => $loginAd,
                 'error'    => $e->getMessage(),
@@ -89,7 +90,7 @@ class WorkerProvisioningService
             ]);
 
             return $worker;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $worker = Worker::where('login_ad', $loginAd)->first();
 
             if ($worker) {

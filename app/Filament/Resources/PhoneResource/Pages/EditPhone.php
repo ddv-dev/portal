@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PhoneResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\PhoneResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -13,7 +14,7 @@ class EditPhone extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()->label('Удалить телефон'),
+            DeleteAction::make()->label('Удалить телефон'),
         ];
     }
         protected function getFormActions(): array

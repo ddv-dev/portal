@@ -2,11 +2,19 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\WorkerPhoneResource\Pages\ListWorkerPhones;
+use App\Filament\Resources\WorkerPhoneResource\Pages\CreateWorkerPhone;
+use App\Filament\Resources\WorkerPhoneResource\Pages\EditWorkerPhone;
 use App\Filament\Resources\WorkerPhoneResource\Pages;
 use App\Filament\Resources\WorkerPhoneResource\RelationManagers;
 use App\Models\WorkerPhone;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,14 +26,14 @@ class WorkerPhoneResource extends Resource
     protected static ?string $model = WorkerPhone::class;
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('worker_id')
+        return $schema
+            ->components([
+                TextInput::make('worker_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('phone_id')
+                TextInput::make('phone_id')
                     ->tel()
                     ->required()
                     ->numeric(),
@@ -36,22 +44,22 @@ class WorkerPhoneResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('worker_id')
+                TextColumn::make('worker_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('phone_id')
+                TextColumn::make('phone_id')
                     ->numeric()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -66,9 +74,9 @@ class WorkerPhoneResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWorkerPhones::route('/'),
-            'create' => Pages\CreateWorkerPhone::route('/create'),
-            'edit' => Pages\EditWorkerPhone::route('/{record}/edit'),
+            'index' => ListWorkerPhones::route('/'),
+            'create' => CreateWorkerPhone::route('/create'),
+            'edit' => EditWorkerPhone::route('/{record}/edit'),
         ];
     }
 }

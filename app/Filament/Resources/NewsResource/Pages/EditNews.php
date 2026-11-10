@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\NewsResource\Pages;
 
+use Exception;
 use App\Filament\Resources\NewsResource;
 use App\Models\Attachment;
 use Filament\Resources\Pages\EditRecord;
@@ -34,7 +35,7 @@ class EditNews extends EditRecord
                     'count' => count($attached)
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error in afterSave attachments', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -67,7 +68,7 @@ class EditNews extends EditRecord
                 // Обновляем форму
                 $this->form->fill($record->toArray());
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error detaching attachment', [
                 'error' => $e->getMessage(),
                 'attachment_id' => $attachmentId,

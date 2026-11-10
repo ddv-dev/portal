@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\Sop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ class SopController extends Controller
                 ->orderBy('year', 'desc')
                 ->pluck('year');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading sops: ' . $e->getMessage());
             $sops = collect();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Database\QueryException;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\Worker;
@@ -75,7 +76,7 @@ class WindowsAuthentication
             try {
                 $worker->redmine_user_id = $redmineUser->id;
                 $worker->save();
-            } catch (\Illuminate\Database\QueryException $e) {
+            } catch (QueryException $e) {
                 Log::error('SSO: cannot bind redmine_user_id to worker', [
                     'worker_id'       => $worker->id,
                     'redmine_user_id' => $redmineUser->id,

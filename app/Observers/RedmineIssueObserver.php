@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use Throwable;
 use App\Models\Redmine\RedmineIssue;
 use App\Services\Notifications\IssueNotifier;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class RedmineIssueObserver
 
         try {
             app(IssueNotifier::class)->onStatusChanged($issue, $old, $new);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('RedmineIssueObserver: onStatusChanged failed', [
                 'issue_id' => $issue->id,
                 'error'    => $e->getMessage(),

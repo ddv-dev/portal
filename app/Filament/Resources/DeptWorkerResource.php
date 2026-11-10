@@ -2,11 +2,19 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\DeptWorkerResource\Pages\ListDeptWorkers;
+use App\Filament\Resources\DeptWorkerResource\Pages\CreateDeptWorker;
+use App\Filament\Resources\DeptWorkerResource\Pages\EditDeptWorker;
 use App\Filament\Resources\DeptWorkerResource\Pages;
 use App\Filament\Resources\DeptWorkerResource\RelationManagers;
 use App\Models\DeptWorker;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,19 +26,19 @@ class DeptWorkerResource extends Resource
     protected static ?string $model = DeptWorker::class;
 
     protected static bool $shouldRegisterNavigation = false;
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('worker_id')
+        return $schema
+            ->components([
+                TextInput::make('worker_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('dept_id')
+                TextInput::make('dept_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('position')
+                TextInput::make('position')
                     ->maxLength(1000),
-                Forms\Components\TextInput::make('order_in_dept')
+                TextInput::make('order_in_dept')
                     ->numeric(),
             ]);
     }
@@ -39,27 +47,27 @@ class DeptWorkerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('worker_id')
+                TextColumn::make('worker_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('dept_id')
+                TextColumn::make('dept_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('position')
+                TextColumn::make('position')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('order_in_dept')
+                TextColumn::make('order_in_dept')
                     ->numeric()
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -74,9 +82,9 @@ class DeptWorkerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDeptWorkers::route('/'),
-            'create' => Pages\CreateDeptWorker::route('/create'),
-            'edit' => Pages\EditDeptWorker::route('/{record}/edit'),
+            'index' => ListDeptWorkers::route('/'),
+            'create' => CreateDeptWorker::route('/create'),
+            'edit' => EditDeptWorker::route('/{record}/edit'),
         ];
     }
 }

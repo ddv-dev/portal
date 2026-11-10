@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\NewsResource\Pages;
 
+use Exception;
 use App\Filament\Resources\NewsResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +34,7 @@ class CreateNews extends CreateRecord
                     'count' => count($attached)
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error in afterCreate attachments', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),

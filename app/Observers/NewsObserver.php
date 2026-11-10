@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use Throwable;
 use App\Models\News;
 use App\Services\Notifications\NewsNotifier;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,7 @@ class NewsObserver
 
         try {
             app(NewsNotifier::class)->onCreated($news, session('worker_id'));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('NewsObserver: onCreated failed', [
                 'news_id' => $news->id,
                 'error'   => $e->getMessage(),

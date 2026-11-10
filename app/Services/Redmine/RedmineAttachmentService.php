@@ -2,6 +2,7 @@
 
 namespace App\Services\Redmine;
 
+use Throwable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -52,7 +53,7 @@ class RedmineAttachmentService
                 'filename'     => $file->getClientOriginalName(),
                 'content_type' => $file->getMimeType() ?: 'application/octet-stream',
             ];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Redmine upload exception', ['error' => $e->getMessage()]);
             return null;
         }

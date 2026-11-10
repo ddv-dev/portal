@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CorpusResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\CorpusResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -13,7 +14,7 @@ class EditCorpus extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

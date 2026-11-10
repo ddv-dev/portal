@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Worker;
@@ -117,7 +118,7 @@ class BirthdaysController extends Controller
 
             return view('birthdays', compact('workers', 'months', 'selectedMonth', 'currentMonth', 'hasSearch'));
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading workers birthdays: '.$e->getMessage());
             Log::error('Error trace: '.$e->getTraceAsString());
             

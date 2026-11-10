@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\News;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -73,7 +74,7 @@ class NewsController extends Controller
                 'per_page' => $perPage,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading news: ' . $e->getMessage());
             
             $news = collect();
@@ -108,7 +109,7 @@ class NewsController extends Controller
 
             return view('home', compact('news', 'search'));
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error searching news: ' . $e->getMessage());
             return redirect()->route('home')->with('error', 'Ошибка при поиске');
         }

@@ -2,18 +2,31 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\InfoResource\Pages\ListInfo;
+use App\Filament\Resources\InfoResource\Pages\CreateInfo;
+use App\Filament\Resources\InfoResource\Pages\EditInfo;
 use App\Filament\Resources\InfoResource\Pages;
 use App\Models\Info;
 use App\Models\InfoType;
 use App\Models\Attachment;
 use App\Models\AttachmentLink;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
@@ -28,18 +41,18 @@ class InfoResource extends Resource
     protected static ?string $modelLabel = 'Информация';
     protected static ?string $pluralModelLabel = 'Информация';
     protected static ?string $navigationLabel = 'Информация';
-    protected static ?string $navigationGroup = 'Контент';
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \UnitEnum | null $navigationGroup = 'Контент';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о записи')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('title')
+                            TextInput::make('title')
                                 ->label('Заголовок')
                                 ->required()
                                 ->maxLength(1000)
@@ -52,13 +65,13 @@ class InfoResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->createOptionForm([
-                                    Forms\Components\TextInput::make('name')
+                                    TextInput::make('name')
                                         ->label('Название типа')
                                         ->required()
                                         ->maxLength(1000)
                                         ->placeholder('Введите название нового типа...'),
                                     
-                                    Forms\Components\TextInput::make('order_menu')
+                                    TextInput::make('order_menu')
                                         ->label('Порядок в меню')
                                         ->numeric()
                                         ->default(0)
@@ -74,14 +87,14 @@ class InfoResource extends Resource
                                 })
                                 ->placeholder('Выберите или создайте тип информации'),
 
-                            Forms\Components\TextInput::make('order')
+                            TextInput::make('order')
                                 ->label('Порядок сортировки')
                                 ->numeric()
                                 ->default(0)
                                 ->minValue(0)
                                 ->helperText('Чем меньше число, тем выше позиция'),
 
-                            Forms\Components\DateTimePicker::make('created_at')
+                            DateTimePicker::make('created_at')
                                 ->label('Дата создания')
                                 ->default(now())
                                 ->required()
@@ -195,13 +208,13 @@ class InfoResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable()
                     ->width('80px'),
 
-                Tables\Columns\TextColumn::make('order')
+                TextColumn::make('order')
                     ->label('Порядок')
                     ->sortable()
                     ->toggleable()
@@ -209,21 +222,21 @@ class InfoResource extends Resource
                     ->color(fn ($state) => $state == 0 ? 'gray' : 'success')
                     ->alignCenter(),
 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Заголовок')
                     ->searchable()
                     ->sortable()
                     ->limit(50)
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('type.name')
+                TextColumn::make('type.name')
                     ->label('Тип')
                     ->sortable()
                     ->badge()
                     ->color('info')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('attachments_count')
+                TextColumn::make('attachments_count')
                     ->label('Вложений')
                     ->counts('attachments')
                     ->badge()
@@ -231,35 +244,35 @@ class InfoResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Дата создания')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type_id')
+                SelectFilter::make('type_id')
                     ->label('Тип информации')
                     ->relationship('type', 'name')
                     ->preload()
                     ->searchable(),
 
-                Tables\Filters\Filter::make('has_attachments')
+                Filter::make('has_attachments')
                     ->label('С вложениями')
                     ->query(fn($query) => $query->whereHas('attachments'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Просмотр'),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('order', 'asc')
@@ -274,9 +287,9 @@ class InfoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListInfo::route('/'),
-            'create' => Pages\CreateInfo::route('/create'),
-            'edit' => Pages\EditInfo::route('/{record}/edit'),
+            'index' => ListInfo::route('/'),
+            'create' => CreateInfo::route('/create'),
+            'edit' => EditInfo::route('/{record}/edit'),
         ];
     }
 

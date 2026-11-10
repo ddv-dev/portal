@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\Worker;
 use App\Models\Dept;
 use App\Models\Corpus;
@@ -32,7 +33,7 @@ class PhoneBookController extends Controller
                 ->orderBy('spr_order')
                 ->get()
                 ->groupBy('type.name');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading departments: ' . $e->getMessage());
             $departments = collect();
         }
@@ -60,7 +61,7 @@ class PhoneBookController extends Controller
                     });
                 })
                 ->get();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error loading buildings: ' . $e->getMessage());
             $buildings = collect();
         }
@@ -118,7 +119,7 @@ class PhoneBookController extends Controller
             // Пытаемся определить правильное имя таблицы
             $deptWorkerModel = $workersQuery->getModel()->deptWorkers()->getRelated();
             $deptWorkerTable = $deptWorkerModel->getTable();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Если не удалось определить, используем стандартное имя
             $deptWorkerTable = 'dept_workers';
         }

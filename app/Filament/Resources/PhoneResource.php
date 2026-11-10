@@ -2,15 +2,27 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\PhoneResource\Pages\ListPhones;
+use App\Filament\Resources\PhoneResource\Pages\CreatePhone;
+use App\Filament\Resources\PhoneResource\Pages\EditPhone;
 use App\Filament\Resources\PhoneResource\Pages;
 use App\Models\Phone;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 
 class PhoneResource extends Resource
 {
@@ -20,24 +32,24 @@ class PhoneResource extends Resource
     protected static ?string $modelLabel = 'Телефон';
     protected static ?string $pluralModelLabel = 'Телефоны';
     protected static ?string $navigationLabel = 'Телефоны';
-    protected static ?string $navigationGroup = 'Управление персоналом';
-    protected static ?string $navigationIcon = 'heroicon-o-phone';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-phone';
     protected static ?int $navigationSort = 6;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о телефоне')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('phone_number')
+                            TextInput::make('phone_number')
                                 ->label('Номер телефона')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('+7 (495) 123-45-67'),
 
-                            Forms\Components\Toggle::make('is_city_number')
+                            Toggle::make('is_city_number')
                                 ->label('Городской номер')
                                 ->default(false)
                                 ->inline(false)
@@ -56,7 +68,7 @@ class PhoneResource extends Resource
                     ->sortable()
                     ->toggleable(),
 */
-                Tables\Columns\TextColumn::make('phone_number')
+                TextColumn::make('phone_number')
                     ->label('Номер телефона')
                     ->searchable()
                     ->sortable()
@@ -64,7 +76,7 @@ class PhoneResource extends Resource
                     ->copyable()
                     ->copyMessage('Номер скопирован'),
 
-                Tables\Columns\IconColumn::make('is_city_number')
+                IconColumn::make('is_city_number')
                     ->label('Городской')
                     ->boolean()
                     ->trueIcon('heroicon-o-building-office')
@@ -73,28 +85,28 @@ class PhoneResource extends Resource
                     ->falseColor('gray')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('workers_count')
+                TextColumn::make('workers_count')
                     ->label('Сотрудников')
                     ->counts('workers')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('is_city_number')
+                Filter::make('is_city_number')
                     ->label('Городские номера')
                     ->query(fn($query) => $query->where('is_city_number', true))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить')
                 ,
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->label('Удалить выбранные'),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()->label('Удалить выбранные'),
                 ]),
             ])
             ->defaultSort('phone_number');
@@ -108,9 +120,9 @@ class PhoneResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPhones::route('/'),
-            'create' => Pages\CreatePhone::route('/create'),
-            'edit' => Pages\EditPhone::route('/{record}/edit'),
+            'index' => ListPhones::route('/'),
+            'create' => CreatePhone::route('/create'),
+            'edit' => EditPhone::route('/{record}/edit'),
         ];
     }
 }

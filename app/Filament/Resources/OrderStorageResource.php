@@ -2,16 +2,31 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\OrderStorageResource\Pages\ListOrderStorages;
+use App\Filament\Resources\OrderStorageResource\Pages\CreateOrderStorage;
+use App\Filament\Resources\OrderStorageResource\Pages\EditOrderStorage;
 use App\Filament\Resources\OrderStorageResource\Pages;
 use App\Models\OrderStorage;
 use App\Models\Attachment;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
@@ -23,42 +38,42 @@ class OrderStorageResource extends Resource
 {
     protected static ?string $model = OrderStorage::class;
     
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationGroup = 'Документация';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \UnitEnum | null $navigationGroup = 'Документация';
     protected static ?string $modelLabel = 'Приказ';
     protected static ?string $pluralModelLabel = 'Приказы';
     protected static ?string $navigationLabel = 'Приказы';
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о приказе')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('title')
+                            TextInput::make('title')
                                 ->label('Название')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Введите название приказа...'),
                             
-                            Forms\Components\TextInput::make('number')
+                            TextInput::make('number')
                                 ->label('Номер приказа')
                                 ->maxLength(1000)
                                 ->placeholder('№ 123-А'),
                             
-                            Forms\Components\Toggle::make('is_active')
+                            Toggle::make('is_active')
                                 ->label('Активен')
                                 ->default(true)
                                 ->inline(false),
                             
-                            Forms\Components\DateTimePicker::make('created_at')
+                            DateTimePicker::make('created_at')
                                 ->label('Дата создания')
                                 ->default(now())
                                 ->disabled(),
                             
-                            Forms\Components\Textarea::make('description')
+                            Textarea::make('description')
                                 ->label('Описание')
                                 ->rows(4)
                                 ->placeholder('Краткое описание приказа...'),
@@ -172,12 +187,12 @@ class OrderStorageResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Название')
                     ->searchable()
                     ->sortable()
@@ -186,7 +201,7 @@ class OrderStorageResource extends Resource
                     ->copyable()
                     ->copyMessage('Название скопировано'),
                 
-                Tables\Columns\TextColumn::make('number')
+                TextColumn::make('number')
                     ->label('Номер')
                     ->searchable()
                     ->sortable()
@@ -194,7 +209,7 @@ class OrderStorageResource extends Resource
                     ->color('info')
                     ->toggleable(),
                 
-                Tables\Columns\TextColumn::make('attachments_count')
+                TextColumn::make('attachments_count')
                     ->label('Вложений')
                     ->counts('attachments')
                     ->sortable()
@@ -202,13 +217,13 @@ class OrderStorageResource extends Resource
                     ->color('success')
                     ->toggleable(),
                 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->label('Описание')
                     ->limit(100)
                     ->html()
                     ->toggleable(),
                 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
@@ -217,39 +232,39 @@ class OrderStorageResource extends Resource
                     ->falseColor('danger')
                     ->sortable(),
                 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Дата создания')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('is_active')
+                Filter::make('is_active')
                     ->label('Активные')
                     ->query(fn ($query) => $query->where('is_active', true))
                     ->toggle(),
                 
-                Tables\Filters\Filter::make('has_description')
+                Filter::make('has_description')
                     ->label('С описанием')
                     ->query(fn ($query) => $query->whereNotNull('description'))
                     ->toggle(),
 
-                Tables\Filters\Filter::make('has_attachments')
+                Filter::make('has_attachments')
                     ->label('С вложениями')
                     ->query(fn($query) => $query->whereHas('attachments'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Просмотр'),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Удалить выбранные'),
                 ]),
             ])
@@ -266,9 +281,9 @@ class OrderStorageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListOrderStorages::route('/'),
-            'create' => Pages\CreateOrderStorage::route('/create'),
-            'edit' => Pages\EditOrderStorage::route('/{record}/edit'),
+            'index' => ListOrderStorages::route('/'),
+            'create' => CreateOrderStorage::route('/create'),
+            'edit' => EditOrderStorage::route('/{record}/edit'),
         ];
     }
 

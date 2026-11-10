@@ -2,18 +2,35 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\WorkerResource\Pages\ListWorkers;
+use App\Filament\Resources\WorkerResource\Pages\CreateWorker;
+use App\Filament\Resources\WorkerResource\Pages\EditWorker;
 use App\Filament\Resources\WorkerResource\Pages;
 use App\Models\Worker;
 use App\Models\Dept;
 use App\Models\CorpusDept;
 use App\Models\Phone;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 
@@ -24,33 +41,33 @@ class WorkerResource extends Resource
     protected static ?string $modelLabel = 'Сотрудник';
     protected static ?string $pluralModelLabel = 'Сотрудники';
     protected static ?string $navigationLabel = 'Сотрудники';
-    protected static ?string $navigationGroup = 'Управление персоналом';
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
     protected static ?int $navigationSort = 5;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Основная информация')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('name_full')
+                            TextInput::make('name_full')
                                 ->label('ФИО')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Иванов Иван Иванович'),
 
-                            Forms\Components\DatePicker::make('birth_date')
+                            DatePicker::make('birth_date')
                                 ->label('Дата рождения')
                                 ->maxDate(now()),
 
-                            Forms\Components\TextInput::make('login_ad')
+                            TextInput::make('login_ad')
                                 ->label('Логин AD')
                                 ->maxLength(1000)
                                 ->placeholder('i.ivanov'),
 
-                            Forms\Components\Toggle::make('is_active')
+                            Toggle::make('is_active')
                                 ->label('Активен')
                                 ->default(true)
                                 ->inline(false),
@@ -60,14 +77,14 @@ class WorkerResource extends Resource
                 Section::make('Настройки отображения')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('spr_order')
+                            TextInput::make('spr_order')
                                 ->label('Порядок в справочнике')
                                 ->numeric()
                                 ->default(0)
                                 ->minValue(0)
                                 ->helperText('Чем меньше число, тем выше позиция в списке.'),
 
-                            Forms\Components\Placeholder::make('spr_order_hint')
+                            Placeholder::make('spr_order_hint')
                                 ->label(' ')
                                 ->content('Используется для сортировки сотрудников внутри отдела в телефонном справочнике'),
                         ]),
@@ -121,7 +138,7 @@ class WorkerResource extends Resource
                                         ->placeholder('Сначала выберите отдел')
                                         ->helperText('Выберите конкретное расположение отдела (корпус, этаж, сектор)'),
 
-                                    Forms\Components\TextInput::make('position')
+                                    TextInput::make('position')
                                         ->label('Должность')
                                         ->maxLength(1000)
                                         ->placeholder('Инженер-программист'),
@@ -140,7 +157,7 @@ class WorkerResource extends Resource
 
                 Section::make('Телефоны')
                     ->schema([
-                        Forms\Components\Select::make('phones')
+                        Select::make('phones')
                             ->label('Телефоны')
                             ->relationship('phones', 'phone_number')
                             ->multiple()
@@ -152,12 +169,12 @@ class WorkerResource extends Resource
 
                 Section::make('Дополнительная информация')
                     ->schema([
-                        Forms\Components\DateTimePicker::make('created_at')
+                        DateTimePicker::make('created_at')
                             ->label('Создан')
                             ->disabled()
                             ->default(now()),
 
-                        Forms\Components\DateTimePicker::make('updated_at')
+                        DateTimePicker::make('updated_at')
                             ->label('Обновлен')
                             ->disabled(),
                     ]),
@@ -168,31 +185,31 @@ class WorkerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('name_full')
+                TextColumn::make('name_full')
                     ->label('ФИО')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('birth_date')
+                TextColumn::make('birth_date')
                     ->label('Дата рождения')
                     ->date('d.m.Y')
                     ->sortable()
                     ->toggleable(),
 
                 // Добавляем колонку spr_order
-                Tables\Columns\TextColumn::make('spr_order')
+                TextColumn::make('spr_order')
                     ->label('Порядок')
                     ->sortable()
                     ->toggleable()
                     ->alignCenter(),
 
-                Tables\Columns\TextColumn::make('deptWorkers')
+                TextColumn::make('deptWorkers')
                     ->label('Отделы и местоположение')
                     ->formatStateUsing(function ($record) {
                         return $record->deptWorkers->map(function ($dw) {
@@ -215,14 +232,14 @@ class WorkerResource extends Resource
                     ->limit(50)
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('phones.phone_number')
+                TextColumn::make('phones.phone_number')
                     ->label('Телефоны')
                     ->badge()
                     ->color('success')
                     ->separator(', ')
                     ->limitList(3),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
@@ -231,41 +248,41 @@ class WorkerResource extends Resource
                     ->falseColor('danger')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('depts')
+                SelectFilter::make('depts')
                     ->label('Отдел')
                     ->relationship('depts', 'name_full')
                     ->multiple()
                     ->preload()
                     ->searchable(),
 
-                Tables\Filters\Filter::make('is_active')
+                Filter::make('is_active')
                     ->label('Активные')
                     ->query(fn($query) => $query->where('is_active', true))
                     ->toggle(),
 
-                Tables\Filters\Filter::make('has_phone')
+                Filter::make('has_phone')
                     ->label('С телефоном')
                     ->query(fn($query) => $query->whereHas('phones'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Просмотр'),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Удалить выбранные'),
                 ]),
             ])
@@ -283,9 +300,9 @@ class WorkerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWorkers::route('/'),
-            'create' => Pages\CreateWorker::route('/create'),
-            'edit' => Pages\EditWorker::route('/{record}/edit'),
+            'index' => ListWorkers::route('/'),
+            'create' => CreateWorker::route('/create'),
+            'edit' => EditWorker::route('/{record}/edit'),
         ];
     }
 }

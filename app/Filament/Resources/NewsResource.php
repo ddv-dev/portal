@@ -2,16 +2,30 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\NewsResource\Pages\ListNews;
+use App\Filament\Resources\NewsResource\Pages\CreateNews;
+use App\Filament\Resources\NewsResource\Pages\EditNews;
+use Exception;
 use App\Filament\Resources\NewsResource\Pages;
 use App\Models\News;
 use App\Models\Attachment;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
@@ -27,24 +41,24 @@ class NewsResource extends Resource
     protected static ?string $modelLabel = 'Новость';
     protected static ?string $pluralModelLabel = 'Новости';
     protected static ?string $navigationLabel = 'Новости';
-    protected static ?string $navigationGroup = 'Контент';
-    protected static ?string $navigationIcon = 'heroicon-o-newspaper';
+    protected static string | \UnitEnum | null $navigationGroup = 'Контент';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-newspaper';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о новости')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('title')
+                            TextInput::make('title')
                                 ->label('Заголовок')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Введите заголовок новости...'),
 
-                            Forms\Components\Toggle::make('is_active')
+                            Toggle::make('is_active')
                                 ->label('Опубликовано')
                                 ->default(true)
                                 ->helperText('Если включено, новость будет видна на сайте'),
@@ -184,20 +198,20 @@ class NewsResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable()
                     ->width('80px'),
 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Заголовок')
                     ->searchable()
                     ->sortable()
                     ->limit(50)
                     ->weight('bold'),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Опубликовано')
                     ->boolean()
                     ->sortable()
@@ -206,41 +220,41 @@ class NewsResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger'),
 
-                Tables\Columns\TextColumn::make('attachments_count')
+                TextColumn::make('attachments_count')
                     ->label('Вложений')
                     ->counts('attachments')
                     ->badge()
                     ->color('info')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('is_active')
+                Filter::make('is_active')
                     ->label('Опубликованные')
                     ->query(fn($query) => $query->where('is_active', true))
                     ->toggle(),
 
-                Tables\Filters\Filter::make('has_attachments')
+                Filter::make('has_attachments')
                     ->label('С вложениями')
                     ->query(fn($query) => $query->whereHas('attachments'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Просмотр'),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -254,9 +268,9 @@ class NewsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListNews::route('/'),
-            'create' => Pages\CreateNews::route('/create'),
-            'edit' => Pages\EditNews::route('/{record}/edit'),
+            'index' => ListNews::route('/'),
+            'create' => CreateNews::route('/create'),
+            'edit' => EditNews::route('/{record}/edit'),
         ];
     }
 
@@ -345,7 +359,7 @@ class NewsResource extends Resource
                     return round($size / 1048576, 1) . ' МБ';
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return '—';
         }
 

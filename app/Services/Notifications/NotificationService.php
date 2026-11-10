@@ -3,6 +3,7 @@
 
 namespace App\Services\Notifications;
 
+use Throwable;
 use App\Models\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -42,7 +43,7 @@ class NotificationService
                 'dedup_key'       => $dedupKey,
                 'created_at'      => now(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Notification create failed', [
                 'worker_id' => $workerId,
                 'type'      => $type,
@@ -69,7 +70,7 @@ class NotificationService
     }
 
 
-public function forWorker(int $workerId, int $limit = 20): \Illuminate\Support\Collection
+public function forWorker(int $workerId, int $limit = 20): Collection
 {
     return Notification::query()
         ->where('worker_id', $workerId)

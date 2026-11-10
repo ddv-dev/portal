@@ -3,6 +3,7 @@
 
 namespace App\Filament\Resources\OrderStorageResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\OrderStorageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -15,7 +16,7 @@ class EditOrderStorage extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()
+            DeleteAction::make()
                 ->label('Удалить'),
         ];
     }

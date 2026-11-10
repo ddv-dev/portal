@@ -2,35 +2,45 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\DeptTypeResource\Pages\ListDeptTypes;
+use App\Filament\Resources\DeptTypeResource\Pages\CreateDeptType;
+use App\Filament\Resources\DeptTypeResource\Pages\EditDeptType;
 use App\Filament\Resources\DeptTypeResource\Pages;
 use App\Models\DeptType;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 
 class DeptTypeResource extends Resource
 {
     protected static ?string $model = DeptType::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
-    protected static ?string $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-tag';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
     protected static ?string $modelLabel = 'Тип отдела';
     protected static ?string $pluralModelLabel = 'Типы отделов';
     protected static ?string $navigationLabel = 'Типы отделов';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о типе отдела')
                     ->schema([
                         Grid::make(1)->schema([
-                            Forms\Components\TextInput::make('name')
+                            TextInput::make('name')
                                 ->label('Название типа')
                                 ->required()
                                 ->maxLength(1000)
@@ -45,12 +55,12 @@ class DeptTypeResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label('Название')
                     ->searchable()
                     ->sortable()
@@ -58,7 +68,7 @@ class DeptTypeResource extends Resource
                     ->copyable()
                     ->copyMessage('Название скопировано'),
 
-                Tables\Columns\TextColumn::make('depts_count')
+                TextColumn::make('depts_count')
                     ->label('Количество отделов')
                     ->counts('depts')
                     ->sortable()
@@ -66,37 +76,37 @@ class DeptTypeResource extends Resource
                     ->color('success')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->label('Обновлен')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\Filter::make('has_depts')
+                Filter::make('has_depts')
                     ->label('Есть отделы')
                     ->query(fn($query) => $query->whereHas('depts'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->label('Редактировать')
                     ->color('primary'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить')
                     ->color('danger')
                     ->modalHeading('Удаление типа отдела')
                     ->modalDescription('Вы уверены, что хотите удалить этот тип отдела?'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Удалить выбранные'),
                 ]),
             ])
@@ -106,9 +116,9 @@ class DeptTypeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDeptTypes::route('/'),
-            'create' => Pages\CreateDeptType::route('/create'),
-            'edit' => Pages\EditDeptType::route('/{record}/edit'),
+            'index' => ListDeptTypes::route('/'),
+            'create' => CreateDeptType::route('/create'),
+            'edit' => EditDeptType::route('/{record}/edit'),
         ];
     }
 }

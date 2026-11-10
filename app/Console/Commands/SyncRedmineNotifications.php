@@ -4,6 +4,8 @@
 
 namespace App\Console\Commands;
 
+use Throwable;
+use Carbon\Carbon;
 use App\Models\Redmine\RedmineIssue;
 use App\Models\Redmine\RedmineJournal;
 use App\Models\Redmine\RedmineUser;
@@ -85,7 +87,7 @@ class SyncRedmineNotifications extends Command
                     try {
                         app(IssueNotifier::class)->onComment($issue, $journal, $author);
                         $commentCount++;
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         Log::error('SyncRedmineNotifications: onComment failed', [
                             'journal_id' => $journal->id,
                             'error'      => $e->getMessage(),
@@ -103,7 +105,7 @@ class SyncRedmineNotifications extends Command
                             $journal->id,                 // ← journal_id в dedup
                         );
                         $statusCount++;
-                    } catch (\Throwable $e) {
+                    } catch (Throwable $e) {
                         Log::error('SyncRedmineNotifications: onStatusChanged failed', [
                             'journal_id' => $journal->id,
                             'error'      => $e->getMessage(),
@@ -131,7 +133,7 @@ class SyncRedmineNotifications extends Command
         // мониторинг бэклога
         $maxCreatedOn = RedmineJournal::where('journalized_type', 'Issue')->max('created_on');
         $backlog = $maxCreatedOn
-            ? \Carbon\Carbon::parse($maxCreatedOn)->diffInSeconds($this->getLastSyncedAt())
+            ? Carbon::parse($maxCreatedOn)->diffInSeconds($this->getLastSyncedAt())
             : 0;
         if ($backlog > 120) {
             Log::warning('redmine:sync backlog', ['backlog_sec' => $backlog, 'last_synced' => $this->getLastSyncedAt()->toDateTimeString()]);
@@ -144,7 +146,7 @@ class SyncRedmineNotifications extends Command
     private function handleDryRun(): int
     {
         $since = $this->option('since')
-            ? \Carbon\Carbon::parse($this->option('since'))
+            ? Carbon::parse($this->option('since'))
             : $this->getLastSyncedAt();
 
         $limit = (int) $this->option('limit');
@@ -183,16 +185,16 @@ class SyncRedmineNotifications extends Command
         return self::SUCCESS;
     }
 
-    private function getLastSyncedAt(): \Carbon\Carbon
+    private function getLastSyncedAt(): Carbon
     {
         $value = DB::table('redmine_sync_state')
             ->where('key', 'redmine_notifications_last_synced_at')
             ->value('value');
 
-        return $value ? \Carbon\Carbon::parse($value) : now()->subDay();
+        return $value ? Carbon::parse($value) : now()->subDay();
     }
 
-    private function setLastSyncedAt(\Carbon\Carbon $at): void
+    private function setLastSyncedAt(Carbon $at): void
     {
         DB::table('redmine_sync_state')->updateOrInsert(
             ['key' => 'redmine_notifications_last_synced_at'],

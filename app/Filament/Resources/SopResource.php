@@ -2,16 +2,30 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\SopResource\Pages\ListSops;
+use App\Filament\Resources\SopResource\Pages\CreateSop;
+use App\Filament\Resources\SopResource\Pages\EditSop;
 use App\Filament\Resources\SopResource\Pages;
 use App\Models\Sop;
 use App\Models\Attachment;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
@@ -26,34 +40,34 @@ class SopResource extends Resource
     protected static ?string $modelLabel = 'SOP';
     protected static ?string $pluralModelLabel = 'SOP';
     protected static ?string $navigationLabel = 'SOP';
-    protected static ?string $navigationGroup = 'Документация';
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \UnitEnum | null $navigationGroup = 'Документация';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о SOP')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('title')
+                            TextInput::make('title')
                                 ->label('Название')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Стандартная операционная процедура...'),
 
-                            Forms\Components\TextInput::make('version')
+                            TextInput::make('version')
                                 ->label('Версия')
                                 ->maxLength(1000)
                                 ->placeholder('1.0'),
 
-                            Forms\Components\Textarea::make('description')
+                            Textarea::make('description')
                                 ->label('Описание')
                                 ->rows(4)
                                 ->placeholder('Подробное описание процедуры'),
 
-                            Forms\Components\Toggle::make('is_active')
+                            Toggle::make('is_active')
                                 ->label('Активен')
                                 ->default(true)
                                 ->inline(false),
@@ -167,26 +181,26 @@ class SopResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable()
                     ->width('80px'),
 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Название')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
                     ->limit(50),
 
-                Tables\Columns\TextColumn::make('version')
+                TextColumn::make('version')
                     ->label('Версия')
                     ->badge()
                     ->color('gray')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('attachments_count')
+                TextColumn::make('attachments_count')
                     ->label('Вложений')
                     ->counts('attachments')
                     ->sortable()
@@ -194,7 +208,7 @@ class SopResource extends Resource
                     ->color('success')
                     ->toggleable(),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
@@ -203,34 +217,34 @@ class SopResource extends Resource
                     ->falseColor('danger')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('is_active')
+                Filter::make('is_active')
                     ->label('Активные')
                     ->query(fn($query) => $query->where('is_active', true))
                     ->toggle(),
 
-                Tables\Filters\Filter::make('has_attachments')
+                Filter::make('has_attachments')
                     ->label('С вложениями')
                     ->query(fn($query) => $query->whereHas('attachments'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->label('Просмотр'),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -244,9 +258,9 @@ class SopResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSops::route('/'),
-            'create' => Pages\CreateSop::route('/create'),
-            'edit' => Pages\EditSop::route('/{record}/edit'),
+            'index' => ListSops::route('/'),
+            'create' => CreateSop::route('/create'),
+            'edit' => EditSop::route('/{record}/edit'),
         ];
     }
 

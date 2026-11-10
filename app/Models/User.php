@@ -61,7 +61,7 @@ class User extends Authenticatable
     public function manageableDutyRoleIds(): array
     {
         if ($this->hasPermission('duty_manage_all')) {
-            return \App\Models\DutyRole::pluck('id')->all();
+            return DutyRole::pluck('id')->all();
         }
 
         return $this->permissions()

@@ -2,11 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\DutyResource\RelationManagers\WorkersRelationManager;
+use App\Filament\Resources\DutyResource\Pages\ListDuties;
+use App\Filament\Resources\DutyResource\Pages\CreateDuty;
+use App\Filament\Resources\DutyResource\Pages\EditDuty;
 use App\Filament\Resources\DutyResource\Pages;
 use App\Filament\Resources\DutyResource\RelationManagers;
 use App\Models\Duty;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,15 +26,15 @@ class DutyResource extends Resource
 {
     protected static ?string $model = Duty::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
 
     protected static ?string $navigationLabel = 'Дежурства';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\DatePicker::make('date')
+        return $schema
+            ->components([
+                DatePicker::make('date')
                     ->label('Дата дежурства')
                     ->required()
                     ->unique(ignoreRecord: true),
@@ -64,23 +73,23 @@ class DutyResource extends Resource
                 return $query;
             })
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->label('Дата')
                     ->date('d.m.Y')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('workers_count')
+                TextColumn::make('workers_count')
                     ->label('Сотрудников (доступных)')
                     ->sortable(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->visible(fn(Duty $record) => static::userCanEditDuty($record)),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->visible(fn() => Auth::user()?->hasPermission('duty_manage_all')),
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                DeleteBulkAction::make()
                     ->visible(fn() => Auth::user()?->hasPermission('duty_manage_all')),
             ])
             ->defaultSort('date', 'desc');
@@ -102,16 +111,16 @@ class DutyResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\WorkersRelationManager::class,
+            WorkersRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDuties::route('/'),
-            'create' => Pages\CreateDuty::route('/create'),
-            'edit' => Pages\EditDuty::route('/{record}/edit'),
+            'index' => ListDuties::route('/'),
+            'create' => CreateDuty::route('/create'),
+            'edit' => EditDuty::route('/{record}/edit'),
         ];
     }
 }

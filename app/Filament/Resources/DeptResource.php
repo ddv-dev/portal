@@ -2,17 +2,25 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\DeptResource\Pages\ListDepts;
+use App\Filament\Resources\DeptResource\Pages\CreateDept;
+use App\Filament\Resources\DeptResource\Pages\EditDept;
 use App\Filament\Resources\DeptResource\Pages;
 use App\Models\Dept;
 use App\Models\DeptType;
 use App\Models\Corpus;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -30,36 +38,36 @@ class DeptResource extends Resource
     protected static ?string $modelLabel = 'Отдел';
     protected static ?string $pluralModelLabel = 'Отделы';
     protected static ?string $navigationLabel = 'Отделы';
-    protected static ?string $navigationGroup = 'Управление персоналом';
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office';
     protected static ?int $navigationSort = 4;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация об отделе')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('name_full')
+                            TextInput::make('name_full')
                                 ->label('Полное название')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Отдел разработки и сопровождения'),
 
-                            Forms\Components\TextInput::make('name_short')
+                            TextInput::make('name_short')
                                 ->label('Краткое название')
                                 ->maxLength(1000)
                                 ->placeholder('ОРиС'),
 
-                            Forms\Components\Select::make('type_id')
+                            Select::make('type_id')
                                 ->label('Тип отдела')
                                 ->relationship('type', 'name')
                                 ->preload()
                                 ->searchable()
                                 ->placeholder('Выберите тип отдела'),
 
-                            Forms\Components\Textarea::make('description')
+                            Textarea::make('description')
                                 ->label('Описание')
                                 ->maxLength(1000)
                                 ->rows(3)
@@ -70,14 +78,14 @@ class DeptResource extends Resource
                 Section::make('Настройки отображения')
                     ->schema([
                         Grid::make(2)->schema([
-                            Forms\Components\TextInput::make('spr_order')
+                            TextInput::make('spr_order')
                                 ->label('Порядок в справочнике')
                                 ->numeric()
                                 ->default(0)
                                 ->minValue(0)
                                 ->helperText('Чем меньше число, тем выше позиция в списке. 0 - в конце списка.'),
                             
-                            Forms\Components\Placeholder::make('spr_order_hint')
+                            Placeholder::make('spr_order_hint')
                                 ->label('')
                                 ->content(function ($record) {
                                     if (!$record) return 'При создании нового отдела установите значение';
@@ -148,7 +156,7 @@ class DeptResource extends Resource
 
                 Section::make('Сотрудники')
                     ->schema([
-                        Forms\Components\Select::make('workers')
+                        Select::make('workers')
                             ->label('Сотрудники')
                             ->relationship('workers', 'name_full')
                             ->multiple()
@@ -163,7 +171,7 @@ class DeptResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('spr_order')
+                TextColumn::make('spr_order')
                     ->label('Порядок')
                     ->sortable()
                     ->toggleable()
@@ -171,36 +179,36 @@ class DeptResource extends Resource
                     ->badge()
                     ->color(fn ($state) => $state == 0 ? 'gray' : 'success'),
 
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('name_full')
+                TextColumn::make('name_full')
                     ->label('Название')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('name_short')
+                TextColumn::make('name_short')
                     ->label('Сокращение')
                     ->searchable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('type.name')
+                TextColumn::make('type.name')
                     ->label('Тип')
                     ->badge()
                     ->color('info')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('workers_count')
+                TextColumn::make('workers_count')
                     ->label('Сотрудников')
                     ->counts('workers')
                     ->sortable()
                     ->toggleable(),
 
                 // ✅ Улучшенное отображение расположения
-                Tables\Columns\TextColumn::make('corpusDepts')
+                TextColumn::make('corpusDepts')
                     ->label('Расположение')
                     ->formatStateUsing(function ($record) {
                         return $record->corpusDepts->map(function ($item) {
@@ -229,7 +237,7 @@ class DeptResource extends Resource
                     ->limit(50)
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('corpusDepts_count')
+                TextColumn::make('corpusDepts_count')
                     ->label('Корпусов')
                     ->counts('corpusDepts')
                     ->sortable()
@@ -272,14 +280,14 @@ class DeptResource extends Resource
                     ->query(fn (Builder $query): Builder => $query->whereHas('corpusDepts'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('spr_order', 'asc')
@@ -294,9 +302,9 @@ class DeptResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDepts::route('/'),
-            'create' => Pages\CreateDept::route('/create'),
-            'edit' => Pages\EditDept::route('/{record}/edit'),
+            'index' => ListDepts::route('/'),
+            'create' => CreateDept::route('/create'),
+            'edit' => EditDept::route('/{record}/edit'),
         ];
     }
 }

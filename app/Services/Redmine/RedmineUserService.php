@@ -2,6 +2,7 @@
 
 namespace App\Services\Redmine;
 
+use Throwable;
 use App\Models\Redmine\RedmineUser;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -78,7 +79,7 @@ class RedmineUserService
             }
 
             return null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Redmine findIdInRedmine exception', [
                 'login' => $login,
                 'error' => $e->getMessage(),
@@ -169,7 +170,7 @@ class RedmineUserService
                 'body'   => $response->body(),
             ]);
             return null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Redmine createInRedmine exception', [
                 'login' => $login,
                 'error' => $e->getMessage(),

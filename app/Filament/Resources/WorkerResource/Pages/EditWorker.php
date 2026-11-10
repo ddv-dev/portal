@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WorkerResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\WorkerResource;
 use Filament\Actions;
 use Filament\Actions\EditAction;
@@ -14,7 +15,7 @@ class EditWorker extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()->label('Удалить сотрудника'),
+            DeleteAction::make()->label('Удалить сотрудника'),
         ];
     }
 

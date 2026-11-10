@@ -2,18 +2,27 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use App\Filament\Resources\BuildingResource\Pages\ListBuildings;
+use App\Filament\Resources\BuildingResource\Pages\CreateBuilding;
+use App\Filament\Resources\BuildingResource\Pages\EditBuilding;
 use App\Filament\Resources\BuildingResource\Pages;
 use App\Filament\Resources\BuildingResource\RelationManagers;
 use App\Models\Building;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 class BuildingResource extends Resource
 {
     protected static ?string $model = Building::class;
@@ -21,26 +30,26 @@ class BuildingResource extends Resource
     protected static ?string $modelLabel = 'Здание';
     protected static ?string $pluralModelLabel = 'Здания';
     protected static ?string $navigationLabel = 'Здания';
-    protected static ?string $navigationGroup = 'Управление персоналом';
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-home';
     protected static ?int $navigationSort = 2;
 
     // app/Filament/Resources/BuildingResource.php
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о здании')
                     ->schema([
                         Grid::make(1)->schema([
-                            Forms\Components\TextInput::make('name')
+                            TextInput::make('name')
                                 ->label('Название')
                                 ->required()
                                 ->maxLength(1000)
                                 ->placeholder('Главный офис'),
 
-                            Forms\Components\Textarea::make('address')
+                            Textarea::make('address')
                                 ->label('Адрес')
                                 ->rows(3)
                                 ->placeholder('ул. Ленина, д. 1, г. Москва'),
@@ -53,25 +62,25 @@ class BuildingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label('Название')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
                     ->copyable(),
 
-                Tables\Columns\TextColumn::make('address')
+                TextColumn::make('address')
                     ->label('Адрес')
                     ->searchable()
                     ->sortable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('corpuses_count')
+                TextColumn::make('corpuses_count')
                     ->label('Корпусов')
                     ->counts('corpuses')
                     ->sortable()
@@ -80,14 +89,14 @@ class BuildingResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('has_corpuses')
+                Filter::make('has_corpuses')
                     ->label('Есть корпуса')
                     ->query(fn($query) => $query->whereHas('corpuses'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->defaultSort('name');
     }
@@ -102,9 +111,9 @@ class BuildingResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBuildings::route('/'),
-            'create' => Pages\CreateBuilding::route('/create'),
-            'edit' => Pages\EditBuilding::route('/{record}/edit'),
+            'index' => ListBuildings::route('/'),
+            'create' => CreateBuilding::route('/create'),
+            'edit' => EditBuilding::route('/{record}/edit'),
         ];
     }
 }

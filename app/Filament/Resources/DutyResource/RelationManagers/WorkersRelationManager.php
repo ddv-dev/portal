@@ -2,9 +2,17 @@
 
 namespace App\Filament\Resources\DutyResource\RelationManagers;
 
+use App\Models\User;
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use App\Models\DutyRole;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,9 +26,9 @@ class WorkersRelationManager extends RelationManager
 
     protected static ?string $title = 'Сотрудники на дежурстве';
 
-    protected static function user(): ?\App\Models\User
+    protected static function user(): ?User
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         return Auth::user();
     }
 
@@ -39,24 +47,24 @@ class WorkersRelationManager extends RelationManager
         return static::hasFullAccess() || !empty(static::manageableRoleIds());
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
         $allowedIds = static::manageableRoleIds();
         $fullAccess = static::hasFullAccess();
         $defaultRole = count($allowedIds) === 1 ? $allowedIds[0] : null;
 
-        return $form->schema([
-            Forms\Components\TextInput::make('fullname')
+        return $schema->components([
+            TextInput::make('fullname')
                 ->label('ФИО')
                 ->required()
                 ->maxLength(255),
 
-            Forms\Components\TextInput::make('number')
+            TextInput::make('number')
                 ->label('Номер')
                 ->tel()
                 ->maxLength(50),
 
-            Forms\Components\Select::make('duty_role_id')
+            Select::make('duty_role_id')
                 ->label('Роль')
                 ->options(
                     DutyRole::whereIn('id', $allowedIds)
@@ -90,15 +98,15 @@ class WorkersRelationManager extends RelationManager
             })
             ->recordTitleAttribute('fullname')
             ->columns([
-                Tables\Columns\TextColumn::make('fullname')->label('ФИО')->searchable(),
-                Tables\Columns\TextColumn::make('number')->label('Номер'),
-                Tables\Columns\TextColumn::make('role.name')->label('Роль')->badge(),
+                TextColumn::make('fullname')->label('ФИО')->searchable(),
+                TextColumn::make('number')->label('Номер'),
+                TextColumn::make('role.name')->label('Роль')->badge(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                CreateAction::make()
                     ->label('Добавить сотрудника')
                     ->visible(fn () => $canManage)
-                    ->mutateFormDataUsing(function (array $data) use ($allowedIds, $fullAccess) {
+                    ->mutateDataUsing(function (array $data) use ($allowedIds, $fullAccess) {
                         if (!$fullAccess) {
                             $roleId = (int) ($data['duty_role_id'] ?? 0);
                             if (!in_array($roleId, $allowedIds, true)) {
@@ -108,18 +116,18 @@ class WorkersRelationManager extends RelationManager
                         return $data;
                     }),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->visible(fn (Model $record) =>
                         $fullAccess || in_array($record->duty_role_id, $allowedIds, true)
                     ),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->visible(fn (Model $record) =>
                         $fullAccess || in_array($record->duty_role_id, $allowedIds, true)
                     ),
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                DeleteBulkAction::make()
                     ->visible(fn () => $fullAccess),
             ])
             // Если управлять нечем — Relation Manager не показываем вовсе

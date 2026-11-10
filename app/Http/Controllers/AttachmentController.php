@@ -3,6 +3,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\News;
+use App\Models\Info;
+use App\Models\Sop;
+use App\Models\OrderStorage;
 use App\Models\Attachment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,10 +17,10 @@ class AttachmentController extends Controller
     {
         // Определяем модель по имени
         $modelMap = [
-            'news' => \App\Models\News::class,
-            'info' => \App\Models\Info::class,
-            'sop' => \App\Models\Sop::class,
-            'order' => \App\Models\OrderStorage::class,
+            'news' => News::class,
+            'info' => Info::class,
+            'sop' => Sop::class,
+            'order' => OrderStorage::class,
         ];
         
         if (!isset($modelMap[$model])) {

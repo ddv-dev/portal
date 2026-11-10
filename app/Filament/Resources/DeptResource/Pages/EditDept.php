@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DeptResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\DeptResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -13,7 +14,7 @@ class EditDept extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()->label('Удалить отдел'),
+            DeleteAction::make()->label('Удалить отдел'),
         ];
     }
     protected function getFormActions(): array

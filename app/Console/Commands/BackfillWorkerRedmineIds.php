@@ -3,6 +3,7 @@
 
 namespace App\Console\Commands;
 
+use DB;
 use App\Models\Redmine\RedmineUser;
 use App\Models\Worker;
 use Illuminate\Console\Command;
@@ -32,7 +33,7 @@ class BackfillWorkerRedmineIds extends Command
             ->all();
 
         $redmine = RedmineUser::query()
-            ->whereIn(\DB::raw('LOWER(login)'), $logins)
+            ->whereIn(DB::raw('LOWER(login)'), $logins)
             ->get(['id', 'login'])
             ->keyBy(fn($u) => strtolower($u->login));
 

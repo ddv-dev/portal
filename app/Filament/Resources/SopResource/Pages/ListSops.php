@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SopResource\Pages;
 
+use Filament\Actions\CreateAction;
 use App\Filament\Resources\SopResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -13,7 +14,7 @@ class ListSops extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

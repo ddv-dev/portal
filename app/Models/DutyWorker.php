@@ -11,12 +11,15 @@ class DutyWorker extends Model
     protected $table = 'duty_worker';
 
     protected $fillable = [
-        'duty_id',
+        'duty_date',
         'fullname',
         'number',
         'duty_role_id',
     ];
 
+    protected $casts = [
+        'duty_date' => 'date',
+    ];
     public function duty(): BelongsTo
     {
         return $this->belongsTo(Duty::class, 'duty_id');

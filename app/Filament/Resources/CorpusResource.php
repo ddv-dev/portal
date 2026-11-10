@@ -2,16 +2,24 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\CorpusResource\Pages\ListCorpuses;
+use App\Filament\Resources\CorpusResource\Pages\CreateCorpus;
+use App\Filament\Resources\CorpusResource\Pages\EditCorpus;
 use App\Filament\Resources\CorpusResource\Pages;
 use App\Models\Corpus;
 use App\Models\Dept;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -25,14 +33,14 @@ class CorpusResource extends Resource
     protected static ?string $modelLabel = 'Корпус';
     protected static ?string $pluralModelLabel = 'Корпуса';
     protected static ?string $navigationLabel = 'Корпуса';
-    protected static ?string $navigationGroup = 'Управление персоналом';
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string | \UnitEnum | null $navigationGroup = 'Управление персоналом';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Информация о корпусе')
                     ->schema([
                         Grid::make(2)->schema([
@@ -155,20 +163,20 @@ class CorpusResource extends Resource
                     ->preload()
                     ->searchable(),
                 
-                Tables\Filters\Filter::make('has_depts')
+                Filter::make('has_depts')
                     ->label('Есть отделы')
                     ->query(fn ($query) => $query->whereHas('corpusDepts'))
                     ->toggle(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->label('Редактировать'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->label('Удалить'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Удалить выбранные'),
                 ]),
             ]);
@@ -182,9 +190,9 @@ class CorpusResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCorpuses::route('/'),
-            'create' => Pages\CreateCorpus::route('/create'),
-            'edit' => Pages\EditCorpus::route('/{record}/edit'),
+            'index' => ListCorpuses::route('/'),
+            'create' => CreateCorpus::route('/create'),
+            'edit' => EditCorpus::route('/{record}/edit'),
         ];
     }
 }
