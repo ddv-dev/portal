@@ -50,14 +50,14 @@ class DutyResource extends Resource
                     $query->withCount('workers');
                 } elseif (!empty($allowedIds)) {
                     $query->withCount([
-                        'workers as workers_count' => fn (Builder $q) =>
-                            $q->whereIn('duty_role_id', $allowedIds),
+                        'workers as workers_count' => fn(Builder $q) =>
+                        $q->whereIn('duty_role_id', $allowedIds),
                     ]);
                 } else {
                     // Нет прав — показываем 0
                     $query->withCount([
-                        'workers as workers_count' => fn (Builder $q) =>
-                            $q->whereRaw('1 = 0'),
+                        'workers as workers_count' => fn(Builder $q) =>
+                        $q->whereRaw('1 = 0'),
                     ]);
                 }
 
@@ -75,13 +75,13 @@ class DutyResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn (Duty $record) => static::userCanEditDuty($record)),
+                    ->visible(fn(Duty $record) => static::userCanEditDuty($record)),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => Auth::user()?->hasPermission('duty_manage_all')),
+                    ->visible(fn() => Auth::user()?->hasPermission('duty_manage_all')),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn () => Auth::user()?->hasPermission('duty_manage_all')),
+                    ->visible(fn() => Auth::user()?->hasPermission('duty_manage_all')),
             ])
             ->defaultSort('date', 'desc');
     }
@@ -97,6 +97,7 @@ class DutyResource extends Resource
         return $user->hasPermission('duty_manage_all')
             || !empty($user->manageableDutyRoleIds());
     }
+
 
     public static function getRelations(): array
     {

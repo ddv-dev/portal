@@ -71,6 +71,6 @@ class User extends Authenticatable
     }
     public function canManageDutyRole(int $roleId): bool
     {
-        return in_array($roleId, $this->manageableDutyRoleIds(), true);
+        return $this->permissions()->whereNotNull('duty_role_id')->pluck('duty_role_id')->all();
     }
 }
