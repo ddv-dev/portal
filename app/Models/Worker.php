@@ -97,6 +97,7 @@ class Worker extends Model
         return $this->birth_date->month === $today->month &&
             $this->birth_date->day === $today->day;
     }
+    
 }
 
 /*
