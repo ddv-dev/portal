@@ -8,10 +8,16 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('phones:prune-orphans')
+    ->weeklyOn(1, '03:30')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/prune-orphans.log'));
+
 Schedule::command('redmine:sync-notifications --limit=1000')
     ->everyMinute()
     ->withoutOverlapping(5)
     ->appendOutputTo(storage_path('logs/sync-notifications.log'));
+
 /*
 php artisan tinker --execute="
 \$ls = DB::table('redmine_sync_state')->where('key','redmine_notifications_last_synced_at')->value('value');

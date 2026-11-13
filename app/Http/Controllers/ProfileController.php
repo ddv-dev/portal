@@ -26,7 +26,7 @@ class ProfileController extends Controller
             'city'   => ['sometimes', 'nullable', 'string', 'regex:/^\d{10}$/'],
             'mobile' => ['sometimes', 'nullable', 'string', 'regex:/^\d{4,6}$/'],
         ], [
-            'city.regex'   => 'Городской номер должен содержать ровно 11 цифр.',
+            'city.regex'   => 'Городской номер должен содержать ровно 10 цифр.',
             'mobile.regex' => 'Внутренний номер должен содержать от 4 до 6 цифр.',
         ]);
 

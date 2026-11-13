@@ -59,7 +59,6 @@ class ProfileService
         if ($number === '') {
             if ($existing) {
                 $worker->phones()->detach($existing->id);
-                $existing->delete();
             }
             return;
         }

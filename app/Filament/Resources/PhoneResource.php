@@ -2,32 +2,29 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Grid;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\Filter;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\PhoneResource\Pages\ListPhones;
 use App\Filament\Resources\PhoneResource\Pages\CreatePhone;
 use App\Filament\Resources\PhoneResource\Pages\EditPhone;
-use App\Filament\Resources\PhoneResource\Pages;
+use App\Filament\Resources\PhoneResource\Pages\ListPhones;
+use App\Filament\Resources\PhoneResource\RelationManagers\WorkersRelationManager;
 use App\Models\Phone;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 
 class PhoneResource extends Resource
 {
     protected static ?string $model = Phone::class;
-
 
     protected static ?string $modelLabel = 'Телефон';
     protected static ?string $pluralModelLabel = 'Телефоны';
@@ -63,11 +60,6 @@ class PhoneResource extends Resource
     {
         return $table
             ->columns([
-                /*     Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->toggleable(),
-*/
                 TextColumn::make('phone_number')
                     ->label('Номер телефона')
                     ->searchable()
@@ -88,13 +80,20 @@ class PhoneResource extends Resource
                 TextColumn::make('workers_count')
                     ->label('Сотрудников')
                     ->counts('workers')
+                    ->badge()
+                    ->color(fn (int $state) => $state === 0 ? 'danger' : 'success')
                     ->sortable()
                     ->toggleable(),
             ])
             ->filters([
                 Filter::make('is_city_number')
                     ->label('Городские номера')
-                    ->query(fn($query) => $query->where('is_city_number', true))
+                    ->query(fn ($query) => $query->where('is_city_number', true))
+                    ->toggle(),
+
+                Filter::make('orphans')
+                    ->label('Только сироты (без сотрудников)')
+                    ->query(fn ($query) => $query->whereDoesntHave('workers'))
                     ->toggle(),
             ])
             ->recordActions([
@@ -114,7 +113,7 @@ class PhoneResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Resources\PhoneResource\RelationManagers\WorkersRelationManager::class,
+            WorkersRelationManager::class,
         ];
     }
 
