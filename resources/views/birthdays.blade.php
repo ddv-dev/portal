@@ -60,7 +60,7 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th class="col-primary">ФИО</th>
+                                    <th class="col-tertiary">ФИО</th>
                                     <th class="col-tertiary">Должность</th>
                                     <th class="col-tertiary">Отделение</th>
                                     <th class="col-tertiary">Дата рождения</th>
