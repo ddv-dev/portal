@@ -35,10 +35,10 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->brandName('Портал управления')
+            ->brandName('Корпоративный портал 62')
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Управление персоналом'),
+                    ->label('Персонал и отделения'),
                 NavigationGroup::make()
                     ->label('Документация'),
                 NavigationGroup::make()

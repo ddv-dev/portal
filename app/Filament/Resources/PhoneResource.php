@@ -63,7 +63,7 @@ class PhoneResource extends Resource
     {
         return $table
             ->columns([
-           /*     Tables\Columns\TextColumn::make('id')
+                /*     Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
                     ->toggleable(),
@@ -101,8 +101,7 @@ class PhoneResource extends Resource
                 EditAction::make()
                     ->label('Редактировать'),
                 DeleteAction::make()
-                    ->label('Удалить')
-                ,
+                    ->label('Удалить'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -114,7 +113,9 @@ class PhoneResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            \App\Filament\Resources\PhoneResource\RelationManagers\WorkersRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

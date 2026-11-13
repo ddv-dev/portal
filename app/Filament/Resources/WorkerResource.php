@@ -8,7 +8,6 @@ use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -22,17 +21,16 @@ use Filament\Actions\DeleteBulkAction;
 use App\Filament\Resources\WorkerResource\Pages\ListWorkers;
 use App\Filament\Resources\WorkerResource\Pages\CreateWorker;
 use App\Filament\Resources\WorkerResource\Pages\EditWorker;
-use App\Filament\Resources\WorkerResource\Pages;
 use App\Models\Worker;
 use App\Models\Dept;
 use App\Models\CorpusDept;
 use App\Models\Phone;
-use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class WorkerResource extends Resource
 {
@@ -49,6 +47,7 @@ class WorkerResource extends Resource
     {
         return $schema
             ->components([
+
                 Section::make('Основная информация')
                     ->schema([
                         Grid::make(2)->schema([
@@ -71,26 +70,72 @@ class WorkerResource extends Resource
                                 ->label('Активен')
                                 ->default(true)
                                 ->inline(false),
-                        ]),
-                    ]),
 
-                Section::make('Настройки отображения')
-                    ->schema([
-                        Grid::make(2)->schema([
                             TextInput::make('spr_order')
                                 ->label('Порядок в справочнике')
                                 ->numeric()
                                 ->default(0)
                                 ->minValue(0)
-                                ->helperText('Чем меньше число, тем выше позиция в списке.'),
-
-                            Placeholder::make('spr_order_hint')
-                                ->label(' ')
-                                ->content('Используется для сортировки сотрудников внутри отдела в телефонном справочнике'),
+                                ->helperText('Чем меньше число, тем выше позиция. Используется для сортировки сотрудников внутри отдела в телефонном справочнике.')
+                                ->columnSpanFull(),
                         ]),
-                    ])
-                    ->collapsible()
-                    ->collapsed(),
+                    ]),
+
+
+                Section::make('Телефоны')
+                    ->schema([
+                        Select::make('phones')
+                            ->label('Телефоны')
+                            ->relationship('phones', 'phone_number')
+                            ->multiple()
+                            ->searchable()
+                            ->getOptionLabelFromRecordUsing(
+                                fn(Phone $record) => $record->phone_number
+                                    . ($record->is_city_number ? ' (городской)' : ' (мобильный)')
+                            )
+                            ->createOptionForm([
+                                TextInput::make('phone_number')
+                                    ->label('Номер телефона')
+                                    ->required()
+                                    ->maxLength(1000)
+                                    ->placeholder('+7 (495) 123-45-67'),
+                                Toggle::make('is_city_number')
+                                    ->label('Городской номер')
+                                    ->default(false)
+                                    ->helperText('Отметьте, если это городской номер'),
+                            ])
+                            ->createOptionUsing(function (array $data): int {
+                                return Phone::create($data)->getKey();
+                            })
+                            ->rules([
+                                function () {
+                                    return function (string $attribute, $value, \Closure $fail) {
+                                        $ids = array_filter((array) $value);
+
+                                        if (empty($ids)) {
+                                            return;
+                                        }
+                                        $phones = Phone::query()
+                                            ->whereIn('id', $ids)
+                                            ->get(['id', 'is_city_number']);
+
+                                        $cityCount   = $phones->where('is_city_number', true)->count();
+                                        $mobileCount = $phones->where('is_city_number', false)->count();
+
+                                        if ($cityCount > 1) {
+                                            $fail('У сотрудника может быть только один городской номер.');
+                                        }
+
+                                        if ($mobileCount > 1) {
+                                            $fail('У сотрудника может быть только один внутренний номер.');
+                                        }
+                                    };
+                                },
+                            ])
+                            ->placeholder('Начните вводить номер телефона')
+                            ->helperText('Максимум один городской и один внутренний номер'),
+                    ]),
+
 
                 Section::make('Местоположение и должность')
                     ->schema([
@@ -99,7 +144,6 @@ class WorkerResource extends Resource
                             ->relationship('deptWorkers')
                             ->schema([
                                 Grid::make(2)->schema([
-                                    // Основной отдел (для обратной совместимости)
                                     Select::make('dept_id')
                                         ->label('Отдел')
                                         ->relationship('dept', 'name_full')
@@ -107,12 +151,11 @@ class WorkerResource extends Resource
                                         ->preload()
                                         ->searchable()
                                         ->placeholder('Выберите отдел')
-                                        ->reactive()
+                                        ->live()
                                         ->afterStateUpdated(function ($state, callable $set) {
                                             $set('corpus_dept_id', null);
                                         }),
 
-                                    // Конкретное местоположение из corpus_depts
                                     Select::make('corpus_dept_id')
                                         ->label('Корпус / Этаж / Сектор')
                                         ->options(function (callable $get) {
@@ -134,14 +177,13 @@ class WorkerResource extends Resource
                                                 ->toArray();
                                         })
                                         ->searchable()
-                                        ->preload()
                                         ->placeholder('Сначала выберите отдел')
                                         ->helperText('Выберите конкретное расположение отдела (корпус, этаж, сектор)'),
 
                                     TextInput::make('position')
                                         ->label('Должность')
-                                        ->maxLength(1000)
-                                        ->placeholder('Инженер-программист'),
+                                        ->placeholder('Инженер-программист')
+                                        ->columnSpanFull(),
                                 ]),
                             ])
                             ->defaultItems(0)
@@ -150,23 +192,12 @@ class WorkerResource extends Resource
                                 fn(array $state): ?string =>
                                 Dept::find($state['dept_id'])?->name_full ?? 'Новый отдел'
                             )
-                            ->createItemButtonLabel('Добавить отдел')
+                            ->addActionLabel('Добавить отдел')
                             ->columns(1)
                             ->columnSpan('full'),
                     ]),
 
-                Section::make('Телефоны')
-                    ->schema([
-                        Select::make('phones')
-                            ->label('Телефоны')
-                            ->relationship('phones', 'phone_number')
-                            ->multiple()
-                            ->preload()
-                            ->searchable()
-                            ->placeholder('Выберите телефоны')
-                            ->helperText('Выберите телефонные номера сотрудника'),
-                    ]),
-
+                    
                 Section::make('Дополнительная информация')
                     ->schema([
                         DateTimePicker::make('created_at')
@@ -202,7 +233,6 @@ class WorkerResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                // Добавляем колонку spr_order
                 TextColumn::make('spr_order')
                     ->label('Порядок')
                     ->sortable()
@@ -212,23 +242,23 @@ class WorkerResource extends Resource
                 TextColumn::make('deptWorkers')
                     ->label('Отделы и местоположение')
                     ->formatStateUsing(function ($record) {
-                        return $record->deptWorkers->map(function ($dw) {
-                            $deptName = $dw->dept?->name_short ?? $dw->dept?->name_full ?? 'Удален';
+                        $lines = $record->deptWorkers->map(function ($dw) {
+                            $deptName = e($dw->dept?->name_short ?? $dw->dept?->name_full ?? 'Удален');
 
-                            // Информация о местоположении
                             $location = '';
                             if ($dw->corpusDept) {
-                                $corpus = $dw->corpusDept->corpus?->name ?? '';
+                                $corpus = e($dw->corpusDept->corpus?->name ?? '');
                                 $floor = $dw->corpusDept->floor !== null ? "эт. {$dw->corpusDept->floor}" : '';
-                                $sector = $dw->corpusDept->sector ? "сек. {$dw->corpusDept->sector}" : '';
+                                $sector = $dw->corpusDept->sector ? 'сек. ' . e($dw->corpusDept->sector) : '';
                                 $location = implode(' | ', array_filter([$corpus, $floor, $sector]));
                             }
 
-                            $position = $dw->position ? "({$dw->position})" : '';
+                            $position = $dw->position ? '(' . e($dw->position) . ')' : '';
                             return trim(implode(' ', array_filter([$deptName, $location, $position])));
-                        })->implode("\n");
+                        });
+
+                        return new HtmlString($lines->implode('<br>'));
                     })
-                    ->html()
                     ->limit(50)
                     ->toggleable(),
 
@@ -286,10 +316,10 @@ class WorkerResource extends Resource
                         ->label('Удалить выбранные'),
                 ]),
             ])
-            // Сортировка по умолчанию - сначала по spr_order, затем по имени
-            ->defaultSort('spr_order', 'asc')
-            ->defaultSort('name_full', 'asc')
-            ->searchable();
+            ->modifyQueryUsing(fn(Builder $query) => $query
+                ->orderBy('spr_order')
+                ->orderBy('name_full')
+            );
     }
 
     public static function getRelations(): array

@@ -1,8 +1,10 @@
 <?php
+// app/Filament/Resources/Users/Schemas/UserForm.php
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
+use App\Models\Permission;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -13,15 +15,37 @@ class UserForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->maxLength(255),
+
                 TextInput::make('email')
-                    ->label('Email address')
                     ->email()
-                    ->required(),
-                DateTimePicker::make('email_verified_at'),
+                    ->required()
+                    ->maxLength(255),
+
                 TextInput::make('password')
                     ->password()
-                    ->required(),
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->required(fn (string $context): bool => $context === 'create')
+                    ->maxLength(255),
+
+                CheckboxList::make('permissions')
+                    ->label('Права доступа')
+                    ->relationship('permissions', 'permission')
+                    ->options(
+                        Permission::query()
+                            ->with('dutyRole')
+                            ->get()
+                            ->mapWithKeys(fn (Permission $p) => [
+                                $p->id => $p->permission
+                                    . ($p->dutyRole ? ' — ' . $p->dutyRole->name : '')
+                                    . ($p->description ? ' (' . $p->description . ')' : ''),
+                            ])
+                            ->toArray()
+                    )
+                    ->columns(2)
+                    ->searchable()
+                    ->bulkToggleable(),
             ]);
     }
 }

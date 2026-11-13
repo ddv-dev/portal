@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
-use BackedEnum;          
+use BackedEnum;
+use Illuminate\Support\Facades\Log;
+
 class DutyCalendar extends Page
 {
     protected string $view = 'filament.pages.duty-calendar';
@@ -13,11 +15,17 @@ class DutyCalendar extends Page
 
     public static function canAccess(): bool
     {
+        Log::info('DutyCalendar::canAccess called', [
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'has_duty_manage_all' => \Illuminate\Support\Facades\Auth::user()?->hasPermission('duty_manage_all'),
+            'manageable_roles' => \Illuminate\Support\Facades\Auth::user()?->manageableDutyRoleIds(),
+        ]);
+
         $user = \Illuminate\Support\Facades\Auth::user();
-        if (!$user instanceof \App\Models\User) {
+        if (! $user instanceof \App\Models\User) {
             return false;
         }
         return $user->hasPermission('duty_manage_all')
-            || !empty($user->manageableDutyRoleIds());
+            || ! empty($user->manageableDutyRoleIds());
     }
 }

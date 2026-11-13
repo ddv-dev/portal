@@ -98,7 +98,11 @@ class DutyCalendarWidget extends FullCalendarWidget
                 ->visible(fn() => $fullAccess || ! empty($allowedIds)),
         ];
     }
-    
+    public static function canView(): bool
+    {
+        return ! request()->routeIs('filament.admin.pages.dashboard');
+    }
+
     protected function headerActions(): array
     {
         return [
