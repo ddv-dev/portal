@@ -27,8 +27,4 @@ class DutyWorker extends Model
         return $this->belongsTo(DutyRole::class, 'duty_role_id');
     }
 
-    public function journal(): HasMany
-    {
-        return $this->hasMany(DutyJournal::class, 'duty_worker_id');
-    }
 }
