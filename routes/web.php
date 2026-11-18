@@ -19,6 +19,7 @@ use App\Models\News;
 use App\Models\Info;
 use App\Models\Sop;
 use App\Models\OrderStorage;
+use App\Http\Controllers\DutyController;
 
 use App\Http\Controllers\Redmine\ProjectController;
 use App\Http\Controllers\Redmine\IssueController;
@@ -32,6 +33,8 @@ Route::get('/search', [NewsController::class, 'search'])->name('home.search');
 Route::get('/info', [InfoController::class, 'index'])->name('info');
 
 Route::get('/sop', [SopController::class, 'index'])->name('sop');
+
+Route::get('/duty', [DutyController::class, 'index'])->name('duty');
 
 Route::get('/birthdays', [BirthdaysController::class, 'index'])->name('birthdays');
 
@@ -88,26 +91,26 @@ Route::prefix('redmine')->name('redmine.')->group(function () {
         ->name('attachments.download');
 });
 
-    Route::get('/notifications', [NotificationController::class, 'index'])
-        ->name('notifications.index');
+Route::get('/notifications', [NotificationController::class, 'index'])
+    ->name('notifications.index');
 
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
-        ->name('notifications.unreadCount');
+Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+    ->name('notifications.unreadCount');
 
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])
-        ->name('notifications.markRead');
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])
+    ->name('notifications.markRead');
 
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
-        ->name('notifications.markAllRead');
+Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
+    ->name('notifications.markAllRead');
 
-        Route::get('/__debug/session', function () {
+Route::get('/__debug/session', function () {
     return response()->json([
         'worker_id'       => session('worker_id'),
         'windows_user'    => session('windows_user'),
         'redmine_user_id' => session('redmine_user_id'),
         'unreadCount'     => session('worker_id')
             ? app(\App\Services\Notifications\NotificationService::class)
-                ->unreadCount(session('worker_id'))
+            ->unreadCount(session('worker_id'))
             : null,
     ]);
 });

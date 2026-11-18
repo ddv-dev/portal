@@ -63,6 +63,7 @@
             <ul class="nav__list">
                 <li class="nav__item"><a href="{{ route('home') }}" class="nav__link {{ request()->routeIs('home') ? 'nav__link--active' : '' }}">Новости</a></li>
                 <li class="nav__item"><a href="{{ route('directory') }}" class="nav__link {{ request()->routeIs('directory') ? 'nav__link--active' : '' }}">Телефонный справочник</a></li>
+                <li class="nav__item"><a href="{{ route('duty') }}" class="nav__link {{ request()->routeIs('duty') ? 'nav__link--active' : '' }}">График дежурств</a></li>
                 <li class="nav__item"><a href="{{ route('info') }}" class="nav__link {{ request()->routeIs('info') ? 'nav__link--active' : '' }}">Информации</a></li>
                 <li class="nav__item"><a href="{{ route('sop') }}" class="nav__link {{ request()->routeIs('sop') ? 'nav__link--active' : '' }}">СОП</a></li>
                 <li class="nav__item"><a href="{{ route('orders') }}" class="nav__link {{ request()->routeIs('orders') ? 'nav__link--active' : '' }}">Приказы</a></li>
